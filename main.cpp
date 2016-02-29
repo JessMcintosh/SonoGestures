@@ -51,14 +51,29 @@ static void help()
 static void drawOptFlowMap(const Mat& flow, Mat& cflowmap, int step,
                     double, const Scalar& color)
 {
+	float scale = 1.1;
     for(int y = 0; y < cflowmap.rows; y += step)
         for(int x = 0; x < cflowmap.cols; x += step)
         {
             const Point2f& fxy = flow.at<Point2f>(y, x);
-            line(cflowmap, Point(x,y), Point(cvRound(x+fxy.x), cvRound(y+fxy.y)),
-                 color);
-            circle(cflowmap, Point(x,y), 2, color, -1);
+			int fx, fy;
+			if(sqrt(fxy.x*fxy.x + fxy.y*fxy.y) < 0.5){
+				fx = 0; fy = 0;
+			}
+			else{
+				fx = fxy.x;
+				fy = fxy.y;
+			}
+            line(cflowmap, Point(x,y), Point(cvRound(x+(fx*scale)), cvRound(y+(fy*scale))),
+                 color, 2);
+            circle(cflowmap, Point(x,y), 1, color, 1);
         }
+}
+
+void blurFlowMatrix(const Mat& flow, Mat& result){
+    //for(int y = 0; y < cflowmap.rows; y += step)
+        //for(int x = 0; x < cflowmap.cols; x += step)
+
 }
 
 int main(int argc, char** argv)
@@ -82,6 +97,7 @@ int main(int argc, char** argv)
     {
         cap >> frame;
         cvtColor(frame, gray, COLOR_BGR2GRAY);
+        GaussianBlur(gray, gray, Size( 7, 7), 0, 0);
 
         if( !prevgray.empty() )
         {
@@ -90,7 +106,9 @@ int main(int argc, char** argv)
 			calcOpticalFlowFarneback(prevgray, gray, uflow, 0.5, 3, 15, 3, 5, 1.2, 0);
             cvtColor(prevgray, cflow, COLOR_GRAY2BGR);
             uflow.copyTo(flow);
-            drawOptFlowMap(flow, cflow, 16, 1.5, Scalar(0, 255, 0));
+			//blurFlowMatrix(flow, flow);
+			//GaussianBlur(flow, flow, Size( 31, 31), 0, 0);
+            drawOptFlowMap(flow, cflow, 8, 1.5, Scalar(0, 255, 0));
             imshow("flow", cflow);
         }
         if(waitKey(30)>=0)
