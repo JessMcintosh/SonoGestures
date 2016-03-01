@@ -9,35 +9,6 @@
 using namespace cv;
 using namespace std;
 
-//int main(int argc, char* argv[])
-//{
-//    cv::VideoCapture cap(argv[1]);
-//    if (!cap.isOpened())
-//    {
-//        std::cout << "!!! Failed to open file: " << argv[1] << std::endl;
-//        return -1;
-//    }
-//
-//    cv::Mat frame;
-//	cv::Mat of_frame;
-//    for(;;)
-//    {
-//
-//        if (!cap.read(frame))             
-//            break;
-//
-//        cv::imshow("window", frame);
-//
-//		cv::calcOpticalFlowFarneback(frame, of_frame, InputOutputArray flow, double pyr_scale, int levels, int winsize, int iterations, int poly_n, double poly_sigma, int flags)
-//
-//        char key = cvWaitKey(10);
-//        if (key == 27) // ESC
-//            break;
-//    }
-//
-//    return 0;
-//}
-
 static void drawOptFlowMap(const Mat& flow, Mat& cflowmap, int step,
                     double, const Scalar& color)
 {
@@ -47,16 +18,8 @@ static void drawOptFlowMap(const Mat& flow, Mat& cflowmap, int step,
         {
             const Point2f& fxy = flow.at<Point2f>(y, x);
 			int fx, fy;
-			//if(sqrt(fxy.x*fxy.x + fxy.y*fxy.y) < 0.5){
-			//	fx = 0; fy = 0;
-			//}
-			//else{
-			//	fx = (int)fxy.x*scale;
-			//	fy = (int)fxy.y*scale;
-			//}
 			fx = cvRound(fxy.x*scale);
 			fy = cvRound(fxy.y*scale);
-            //line(cflowmap, Point(x,y), Point(cvRound(x+(fx*scale)), cvRound(y+(fy*scale))),
 			
 			// red represents horizontal movement left
 			// blue represents horizontal movement right
@@ -67,7 +30,7 @@ static void drawOptFlowMap(const Mat& flow, Mat& cflowmap, int step,
 			else b = fx;
 
 			Scalar col( b*20, 0, r*20);
-            line(cflowmap, Point(x,y), Point(cvRound(x+fx), cvRound(y+fy)), col, 2);
+            line(cflowmap, Point(x,y), Point(x+fx, y+fy), col, 2);
             //arrowedLine(cflowmap, Point(x,y), Point(cvRound(x+(fx*scale)), cvRound(y+(fy*scale))), col, 2);
             circle(cflowmap, Point(x,y), 1, color, 1);
         }
@@ -82,8 +45,39 @@ void thresholdFlowMatrix(Mat& flow, float threshold){
 				f.y = 0.0;
 			}
 		}
+}
 
+void absdiffRegions(const UMat& prev, const UMat& curr, UMat& dst){
+	
+}
 
+double sumSqMag(Mat& flow){
+	double mag = 0.0;
+    for(int y = 0; y < flow.rows; y ++)
+        for(int x = 0; x < flow.cols; x ++){
+            Point2f& f = flow.at<Point2f>(y, x);
+			//mag += sqrt(f.x*f.x + f.y*f.y);
+			mag += (f.x*f.x + f.y*f.y);
+		}
+	return mag/1000.0;
+}
+
+double sumMagHorizontal(Mat& flow){
+	double mag = 0.0;
+    for(int y = 0; y < flow.rows; y ++)
+        for(int x = 0; x < flow.cols; x ++){
+            Point2f& f = flow.at<Point2f>(y, x);
+			mag += sqrt(f.x*f.x + f.y*f.y);
+		}
+	return mag;
+}
+
+void calcFlowMag(Mat& flow, Mat& result){
+    for(int y = 0; y < flow.rows; y ++)
+        for(int x = 0; x < flow.cols; x ++){
+            Point2f& f = flow.at<Point2f>(y, x);
+			result.at<float>(y,x) = sqrt(f.x*f.x + f.y*f.y);
+		}
 }
 
 int main(int argc, char** argv)
@@ -92,19 +86,30 @@ int main(int argc, char** argv)
     if( !cap.isOpened() )
         return -1;
 
+	double fps = cap.get(CV_CAP_PROP_FPS);
+	cout << "fps : " << fps << endl;
+
+	Mat acc_flow_magnitudes;
+	Mat curr_flow_magnitude;
+
     Mat flow, cflow, frame, prevflow;
     UMat gray, prevgray, uflow;
 	UMat diffgray;
+	UMat cum_diff;
     namedWindow("flow", 1);
 	Rect cropRectangle(125,90,455,360);
-	double alpha = 0.5;
+	//double alpha = 0.6;
+	double alpha = 0.9;
 	double beta = (1.0 - alpha);
 	bool first = 1;
+	int frameCount = 0;
 
-    for(;;)
+    for(;;frameCount++)
     {
         cap >> frame;
-        frame = frame(cropRectangle);
+		if (frame.empty()) break;
+
+        //frame = frame(cropRectangle);
         cvtColor(frame, gray, COLOR_BGR2GRAY);
         GaussianBlur(gray, gray, Size( 7, 7), 0, 0);
 
@@ -115,24 +120,65 @@ int main(int argc, char** argv)
 			calcOpticalFlowFarneback(prevgray, gray, uflow, 0.5, 3, 15, 3, 5, 1.2, 0);
             cvtColor(prevgray, cflow, COLOR_GRAY2BGR);
             uflow.copyTo(flow);
-			if(!first)
-			addWeighted(prevflow, alpha, flow, beta, 0.0, flow);
-			prevflow = flow.clone();
 			//thresholdFlowMatrix(flow, 1.5);
-			//GaussianBlur(flow, flow, Size( 31, 31), 0, 0);
+			GaussianBlur(flow, flow, Size( 31, 31), 0, 0);
+
+			if(!first){
+				// In order to average the frames
+				addWeighted(prevflow, alpha, flow, beta, 0.0, flow);
+				//absdiff(prevgray, gray, diffgray);
+				//addWeighted(cum_diff, 0.7, diffgray, 0.3, 0.0, cum_diff);
+				//addWeighted(cum_diff, 0.1, diffgray, 0.9, 0.0, cum_diff);
+
+				//double sum = pow((cv::sum(diffgray)[0]/10000.0),2);
+				//cout << sum << endl;
+				
+				//add_flow_magnitudes(acc_flow_magnitudes
+				//acc_flow_magnitudes += flow;
+				calcFlowMag(flow, curr_flow_magnitude);
+				imshow("flow mag", curr_flow_magnitude);
+				//magnitude(flow[0], flow[1], mag);
+				acc_flow_magnitudes += curr_flow_magnitude;
+					
+			}
+			else{
+				cum_diff = UMat::zeros(gray.rows, gray.cols, CV_8UC1);
+				acc_flow_magnitudes = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
+				curr_flow_magnitude = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
+			}
+			prevflow = flow.clone();
+			//cout << flow;
+
             //drawOptFlowMap(flow, cflow, 8, 1.5, Scalar(0, 255, 0));
             drawOptFlowMap(flow, cflow, 16, 1.5, Scalar(0, 255, 0));
+			
             imshow("flow", cflow);
 			first = 0;
 
-			absdiff(prevgray, gray, diffgray);
-			imshow("diff", diffgray);
+			double sum = sumSqMag(flow);
+			//double sum = sumMagHorizontal(flow);
+			//double sum = cv::sum(gray)[0]/(gray.rows *gray.cols);
+			cout << sum << endl;
+
+			//absdiff(prevgray, gray, diffgray);
+			
+			//imshow("diff", cum_diff);
+			
+
         }
         //if(waitKey(30) == 'q')
         if(waitKey(1) == 'q')
             break;
         std::swap(prevgray, gray);
     }
+	//imshow("acc flow", acc_flow_magnitudes);
+	//drawAccFlowMap(acc_flow_magnitudes, cflow, 16, 1.5, Scalar(0, 255, 0));
+	Mat norm_magnitudes;
+    acc_flow_magnitudes.convertTo(norm_magnitudes, CV_32FC1, 1.0/(frameCount*2.0));	
+	imshow("flow acc", norm_magnitudes);
+	imshow("flow", cflow);
+	waitKey();
+			
     return 0;
 }
 
