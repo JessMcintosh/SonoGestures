@@ -4,15 +4,15 @@
 
 #./OpenSonoGestures ~/Dropbox/Asier_Jess/SonicGestures/experiments/test25Feb/3\ -\ Longitudinal\ Proximal\ Anterior/index/index0.mp4
 
-videodir="~/Dropbox/Asier_Jess/SonicGestures/experiments/test25Feb/3 - Longitudinal Proximal Anterior/"
-
-echo $videodir
-
-for file in `ls -a $videodir`; do
-	echo $file
-done
-
-exit 
+#videodir="~/Dropbox/Asier_Jess/SonicGestures/experiments/test25Feb/3 - Longitudinal Proximal Anterior/"
+#
+#echo $videodir
+#
+#for file in `ls -a $videodir`; do
+#	echo $file
+#done
+#
+#exit 
 
 for file in ~/Dropbox/Asier_Jess/SonicGestures/experiments/test25Feb/3\ -\ Longitudinal\ Proximal\ Anterior/thumb/*;  do
 	#echo $file
