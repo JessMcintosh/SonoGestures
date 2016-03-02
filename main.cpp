@@ -80,6 +80,32 @@ void calcFlowMag(Mat& flow, Mat& result){
 		}
 }
 
+void sampleMatrix(Mat& magnitudes, Mat& result, int step){
+	// Loop through sampled points
+	int count = 0;
+    for(int y = step/2; y < magnitudes.rows-step; y += step){
+        for(int x = step/2; x < magnitudes.cols-step; x += step){
+
+			// Loop through neighbouring pixels
+
+			float avg = 0;
+			
+			for (int i = 0; i < step; i++) 
+				for (int j = 0; j < step; j++) 
+					avg += magnitudes.at<float>(y+i, x+j);
+
+			avg /= step*step;
+			for (int i = 0; i < step; i++) 
+				for (int j = 0; j < step; j++)
+					result.at<float>(y+i,x+j) = avg;
+
+			cout << count << ":" << avg << " ";
+			count ++;
+		}
+		//cout << endl;
+	}
+}
+
 int main(int argc, char** argv)
 {
     VideoCapture cap(argv[1]);
@@ -87,7 +113,12 @@ int main(int argc, char** argv)
         return -1;
 
 	double fps = cap.get(CV_CAP_PROP_FPS);
-	cout << "fps : " << fps << endl;
+	double x_res = cap.get(CV_CAP_PROP_FRAME_WIDTH);
+	double y_res = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+
+	//cout << "fps : " << fps << endl;
+	//cout << "res : " << x_res << "," << y_res << endl;
+
 
 	Mat acc_flow_magnitudes;
 	Mat curr_flow_magnitude;
@@ -136,7 +167,7 @@ int main(int argc, char** argv)
 				//add_flow_magnitudes(acc_flow_magnitudes
 				//acc_flow_magnitudes += flow;
 				calcFlowMag(flow, curr_flow_magnitude);
-				imshow("flow mag", curr_flow_magnitude);
+				//imshow("flow mag", curr_flow_magnitude);
 				//magnitude(flow[0], flow[1], mag);
 				acc_flow_magnitudes += curr_flow_magnitude;
 					
@@ -152,13 +183,13 @@ int main(int argc, char** argv)
             //drawOptFlowMap(flow, cflow, 8, 1.5, Scalar(0, 255, 0));
             drawOptFlowMap(flow, cflow, 16, 1.5, Scalar(0, 255, 0));
 			
-            imshow("flow", cflow);
+            //imshow("flow", cflow);
 			first = 0;
 
 			double sum = sumSqMag(flow);
 			//double sum = sumMagHorizontal(flow);
 			//double sum = cv::sum(gray)[0]/(gray.rows *gray.cols);
-			cout << sum << endl;
+			//cout << sum << endl;
 
 			//absdiff(prevgray, gray, diffgray);
 			
@@ -175,9 +206,15 @@ int main(int argc, char** argv)
 	//drawAccFlowMap(acc_flow_magnitudes, cflow, 16, 1.5, Scalar(0, 255, 0));
 	Mat norm_magnitudes;
     acc_flow_magnitudes.convertTo(norm_magnitudes, CV_32FC1, 1.0/(frameCount*2.0));	
-	imshow("flow acc", norm_magnitudes);
-	imshow("flow", cflow);
-	waitKey();
+	Mat magnitudes_sampled;
+	magnitudes_sampled = norm_magnitudes.clone();
+	//sampleMatrix(magnitudes_sampled, magnitudes_sampled, 16);
+	sampleMatrix(magnitudes_sampled, magnitudes_sampled, 32);
+
+	//imshow("flow acc", norm_magnitudes);
+	//imshow("flow sampled", magnitudes_sampled);
+	//imshow("flow", cflow);
+	//while(waitKey() != 'q'){}
 			
     return 0;
 }
