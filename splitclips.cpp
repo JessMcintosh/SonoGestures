@@ -62,48 +62,12 @@ double sumSqMag(Mat& flow){
 	return mag/1000.0;
 }
 
-double sumMagHorizontal(Mat& flow){
-	double mag = 0.0;
-    for(int y = 0; y < flow.rows; y ++)
-        for(int x = 0; x < flow.cols; x ++){
-            Point2f& f = flow.at<Point2f>(y, x);
-			mag += sqrt(f.x*f.x + f.y*f.y);
-		}
-	return mag;
-}
-
 void calcFlowMag(Mat& flow, Mat& result){
     for(int y = 0; y < flow.rows; y ++)
         for(int x = 0; x < flow.cols; x ++){
             Point2f& f = flow.at<Point2f>(y, x);
 			result.at<float>(y,x) = sqrt(f.x*f.x + f.y*f.y);
 		}
-}
-
-void sampleMatrix(Mat& magnitudes, Mat& result, int step){
-	// Loop through sampled points
-	int count = 0;
-    for(int y = step/2; y < magnitudes.rows-step; y += step){
-        for(int x = step/2; x < magnitudes.cols-step; x += step){
-
-			// Loop through neighbouring pixels
-
-			float avg = 0;
-			
-			for (int i = 0; i < step; i++) 
-				for (int j = 0; j < step; j++) 
-					avg += magnitudes.at<float>(y+i, x+j);
-
-			avg /= step*step;
-			for (int i = 0; i < step; i++) 
-				for (int j = 0; j < step; j++)
-					result.at<float>(y+i,x+j) = avg;
-
-			cout << count << ":" << avg << " ";
-			count ++;
-		}
-	}
-	cout << endl;
 }
 
 int main(int argc, char** argv)
@@ -146,55 +110,25 @@ int main(int argc, char** argv)
 
         if( !prevgray.empty() )
         {
-			//calcOpticalFlowPyrLK();
-			//createOptFlow_DualTVL1();
 			calcOpticalFlowFarneback(prevgray, gray, uflow, 0.5, 3, 15, 3, 5, 1.2, 0);
             cvtColor(prevgray, cflow, COLOR_GRAY2BGR);
             uflow.copyTo(flow);
 			//thresholdFlowMatrix(flow, 1.5);
-			GaussianBlur(flow, flow, Size( 31, 31), 0, 0);
 
 			if(!first){
-				// In order to average the frames
+				// Average the frames
 				addWeighted(prevflow, alpha, flow, beta, 0.0, flow);
-				//absdiff(prevgray, gray, diffgray);
-				//addWeighted(cum_diff, 0.7, diffgray, 0.3, 0.0, cum_diff);
-				//addWeighted(cum_diff, 0.1, diffgray, 0.9, 0.0, cum_diff);
-
-				//double sum = pow((cv::sum(diffgray)[0]/10000.0),2);
-				//cout << sum << endl;
-				
-				//add_flow_magnitudes(acc_flow_magnitudes
-				//acc_flow_magnitudes += flow;
-				calcFlowMag(flow, curr_flow_magnitude);
-				//imshow("flow mag", curr_flow_magnitude);
-				//magnitude(flow[0], flow[1], mag);
-				acc_flow_magnitudes += curr_flow_magnitude;
 					
 			}
-			else{
-				cum_diff = UMat::zeros(gray.rows, gray.cols, CV_8UC1);
-				acc_flow_magnitudes = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
-				curr_flow_magnitude = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
-			}
 			prevflow = flow.clone();
-			//cout << flow;
 
-            //drawOptFlowMap(flow, cflow, 8, 1.5, Scalar(0, 255, 0));
             drawOptFlowMap(flow, cflow, 16, 1.5, Scalar(0, 255, 0));
 			
-            //imshow("flow", cflow);
+            imshow("flow", cflow);
 			first = 0;
 
 			double sum = sumSqMag(flow);
-			//double sum = sumMagHorizontal(flow);
-			//double sum = cv::sum(gray)[0]/(gray.rows *gray.cols);
-			//cout << sum << endl;
-
-			//absdiff(prevgray, gray, diffgray);
-			
-			//imshow("diff", cum_diff);
-			
+			cout << sum << endl;
 
         }
         //if(waitKey(30) == 'q')
@@ -202,19 +136,8 @@ int main(int argc, char** argv)
             break;
         std::swap(prevgray, gray);
     }
-	//imshow("acc flow", acc_flow_magnitudes);
-	//drawAccFlowMap(acc_flow_magnitudes, cflow, 16, 1.5, Scalar(0, 255, 0));
-	Mat norm_magnitudes;
-    acc_flow_magnitudes.convertTo(norm_magnitudes, CV_32FC1, 1.0/(frameCount*2.0));	
-	Mat magnitudes_sampled;
-	magnitudes_sampled = norm_magnitudes.clone();
-	//sampleMatrix(magnitudes_sampled, magnitudes_sampled, 16);
-	sampleMatrix(magnitudes_sampled, magnitudes_sampled, 32);
 
-	//imshow("flow acc", norm_magnitudes);
-	//imshow("flow sampled", magnitudes_sampled);
-	//imshow("flow", cflow);
-	//while(waitKey() != 'q'){}
+	while(waitKey() != 'q'){}
 			
     return 0;
 }
