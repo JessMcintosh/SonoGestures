@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 	int ex = static_cast<int>(cap.get(CV_CAP_PROP_FOURCC));
 
 	//outputVideo.open(fileName, CV_FOURCC('F','M','P','4'), fps, Size(x_res,y_res), true);
-	outputVideo.open(fileName, CV_FOURCC('M','M','P','4'), fps, Size(x_res,y_res), true);
+	outputVideo.open(fileName, CV_FOURCC('D','I','V','X'), fps, Size(x_res,y_res), true);
 	Mat frame;
 
 	int frameCount = 0;

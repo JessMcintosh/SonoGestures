@@ -167,7 +167,7 @@ int main(int argc, char** argv)
 				//add_flow_magnitudes(acc_flow_magnitudes
 				//acc_flow_magnitudes += flow;
 				calcFlowMag(flow, curr_flow_magnitude);
-				//imshow("flow mag", curr_flow_magnitude);
+				imshow("flow mag", curr_flow_magnitude);
 				//magnitude(flow[0], flow[1], mag);
 				acc_flow_magnitudes += curr_flow_magnitude;
 					
@@ -212,9 +212,9 @@ int main(int argc, char** argv)
 	sampleMatrix(magnitudes_sampled, magnitudes_sampled, 32);
 
 	//imshow("flow acc", norm_magnitudes);
-	//imshow("flow sampled", magnitudes_sampled);
+	imshow("flow sampled", magnitudes_sampled);
 	//imshow("flow", cflow);
-	//while(waitKey() != 'q'){}
+	while(waitKey() != 'q'){}
 			
     return 0;
 }

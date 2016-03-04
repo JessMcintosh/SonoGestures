@@ -2,19 +2,58 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pylab
 import sys
+import datetime
+import getopt
+import os
+import subprocess
+
+def splitvideos():
+    splitPoints.sort()
+    print splitPoints
+    videoDir = os.path.dirname(videoFile)
+    parentPath = os.getcwd()
+    programPath = os.path.join(parentPath, 'SplitClips')
+    print programPath
+
+    gestures = ('thumb','index','middle','ring','pinky','fist')
+    numGestPerformed = 5
+
+    if videoDir != '':
+        os.chdir(videoDir)
+
+    currentGesture = 0
+    currentIteration = 0
+
+    if not os.path.exists(gestures[0]):
+        os.mkdir(gestures[0])
+
+    for i in range(len(splitPoints) - 1):
+        if currentIteration == numGestPerformed:
+            currentGesture += 1
+            currentIteration = 0
+            if not os.path.exists(gestures[currentGesture]):
+                os.mkdir(gestures[currentGesture])
+        print "split : ", splitPoints[i], splitPoints[i+1]
+
+        filename = gestures[currentGesture] + str(currentIteration) + '.avi'
+        outfile = os.path.join(videoDir, gestures[currentGesture], filename)
+        print 'output: ', outfile
+
+        currentIteration += 1
+        subprocess.call([programPath, videoFile, str(splitPoints[i]), str(splitPoints[i+1]), outfile])
+
+
 
 def onclick(event):
     global initX, initY
-    print 'button=%d, x=%d, y=%d, xdata=%f, ydata=%f'%(
-        event.button, event.x, event.y, event.xdata, event.ydata)
     
     initX = event.xdata
     initY = event.ydata
 
 def onrelease(event):
     global initX, initY
-    print 'button=%d, x=%d, y=%d, xdata=%f, ydata=%f'%(
-        event.button, event.x, event.y, event.xdata, event.ydata)
+    print 'xdata=%f'%(
+        event.xdata)
 
     if initX == event.xdata and initY == event.ydata:
         #circ = plt.Circle((event.xdata, event.ydata), radius=2, color='g')
@@ -30,7 +69,7 @@ def press(event):
     sys.stdout.flush()
 
     if event.key == 'w':
-        print splitPoints
+        splitvideos()
         exit()
     if event.key == 'u':
         splitPoints.pop()
@@ -49,6 +88,8 @@ def press(event):
             fig.canvas.mpl_disconnect(cid)
             print 'navigation mode on'
             toggleClick = True
+
+videoFile = sys.argv[1] 
 
 toggleClick = False
 
