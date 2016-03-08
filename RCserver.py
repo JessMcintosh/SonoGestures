@@ -12,8 +12,6 @@ class SerialManager():
 
     def __init__(self):
 
-        self.num_data_vals = 150
-
         if sys.platform.startswith('win'):
                 ports = ['COM' + str(i + 1) for i in range(256)]
 
@@ -61,41 +59,39 @@ class SerialManager():
                 time.sleep(1)
         time.sleep(2)
 
+        self.recordData = False
+
         print 'Connected!'
 
     def startDataCapture(self):
+        global storeDir
         print 'starting data capture'
         #send begin packet
         #print 'sending begin packet'
         self.ser.write("ready\n")  
+        self.recordData = True
 
         s1 = []
         s2 = []
         s3 = []
         s4 = []
         s5 = []
-        s6 = []
-        s7 = []
-        s8 = []
 
         #read 300 values of each sensor
         i = 0
-        while(i < self.num_data_vals):
-                if (i % 20) == 0:
-                        print '.'
+        while(self.recordData):
+                if (i % 100) == 0:
+                        print i
                 
                 try:
                         line = self.ser.readline()
                         data = [int(val) for val in line.split()]
-                        if(len(data) == 8):
+                        if(len(data) == 5):
                                 s1.append(data[0])
                                 s2.append(data[1])
                                 s3.append(data[2])
                                 s4.append(data[3])
                                 s5.append(data[4])
-                                s6.append(data[5])
-                                s7.append(data[6])
-                                s8.append(data[7])
                                 i += 1
                         #else:
                         #	print 'bad data'
@@ -109,18 +105,18 @@ class SerialManager():
         print sum(s3)/len(s3)
         print sum(s4)/len(s4)
         print sum(s5)/len(s5)
-        print sum(s6)/len(s6)
-        print sum(s7)/len(s7)
-        print sum(s8)/len(s8)
 
         #save data to file
         #write to file
         ts = time.time()
         filename = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
-        f = open(os.path.join(currentDir, filename), 'w')
+        if storeDir != '':
+            f = open(os.path.join(storeDir, filename), 'w')
+        else:
+            f = open(filename, 'w')
 
-        for i in range(0, self.num_data_vals):
+        for i in range(0, len(s1)):
             f.write(str(s1[i]))
             f.write(' ')
             f.write(str(s2[i]))
@@ -130,12 +126,6 @@ class SerialManager():
             f.write(str(s4[i]))
             f.write(' ')
             f.write(str(s5[i]))
-            f.write(' ')
-            f.write(str(s6[i]))
-            f.write(' ')
-            f.write(str(s7[i]))
-            f.write(' ')
-            f.write(str(s8[i]))
             f.write('\n')
         f.close()
 
@@ -156,29 +146,18 @@ class MyUDPHandler(SocketServer.BaseRequestHandler):
         print "{} wrote:".format(self.client_address[0])
         print data
 
-        global newgest
-        global currentGesture
-        global currentDir
-        if newgest is True:
-            currentGesture = data
-            currentDir = os.path.join(trainingDir, currentGesture)
-            if not os.path.exists(currentDir):
-                os.makedirs(currentDir)
-            newgest = False
-        else:
-            if data == "start":
-                SM.startDataCapture()
-            #if data == "stop":
-                #SM.stopDataCapture()
-            if data == "exit":
-                SM.ser.close()
-                #self.server_close()
-                #self.shutdown()
-                #self.interrupt_main()
-                #raise KeyboardInterrupt
-            if data == "new":
-               # new gesture incoming, set flag
-               newgest = True
+        global storeDir
+
+        if data == "start":
+            SM.startDataCapture()
+        if data == "stop":
+            SM.recordData = False
+        if data == "exit":
+            SM.ser.close()
+            #self.server_close()
+            #self.shutdown()
+            #self.interrupt_main()
+            #raise KeyboardInterrupt
                
 # set filepath and create if necessary 
 
@@ -190,17 +169,17 @@ if __name__ == "__main__":
 
     newgest = False
     
-    trainingDir = 'TrainingData'
+    storeDir = './'
     currentGesture = ''
     currentDir = ''
     
     try:
-        trainingDir = sys.argv[1]
+        storeDir = sys.argv[1]
     except:
-        print 'Using directory "./TrainingData/"'
+        print 'Using current directory'
 
-    if not os.path.exists(trainingDir):
-        os.makedirs(trainingDir)
+    if not os.path.exists(storeDir):
+        os.makedirs(storeDir)
 
 
     SM = SerialManager()

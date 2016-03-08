@@ -1,24 +1,5 @@
 #! /usr/bin/python
 
-#
-# Qt example for VLC Python bindings
-# Copyright (C) 2009-2010 the VideoLAN team
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
-#
-
 import sys
 import os.path
 import vlc
@@ -44,10 +25,6 @@ class NetworkManager():
     def sendStop(self):
         self.sock.sendto("stop\n", (self.HOST,self.PORT))
 
-    def newGesture(self, name):
-        self.sock.sendto("new\n", (self.HOST,self.PORT))
-        self.sock.sendto(name + "\n", (self.HOST,self.PORT))
-
     def sendExit(self):
         self.sock.sendto("exit\n", (self.HOST,self.PORT))
 
@@ -64,12 +41,7 @@ class Player(QtGui.QMainWindow):
         self.mediaplayer = self.instance.media_player_new()
 
         self.createUI()
-        self.isPaused = False
 
-        self.gestureNumber = 0
-        self.playcount = 0
-        self.gestures =["Palm", "Thumb", "Index", "Middle", "Ring", "Pinky", "Fist", "Point", "Spread", "Flex", "Ext", "RDev", "UDev", "Pronate", "Supinate", "Palm", "Thumb", "Index", "Middle", "Ring", "Pinky", "Fist", "Point", "Spread", "Flex", "Ext", "RDev", "UDev", "Pronate", "Supinate"]
-        self.extension = '.mp4'
 
     def createUI(self):
         """Set up the user interface, signals & slots
@@ -88,49 +60,49 @@ class Player(QtGui.QMainWindow):
         self.videoframe.setPalette(self.palette)
         self.videoframe.setAutoFillBackground(True)
 
-        self.positionslider = QtGui.QSlider(QtCore.Qt.Horizontal, self)
-        self.positionslider.setToolTip("Position")
-        self.positionslider.setMaximum(1000)
-        self.connect(self.positionslider,
-                     QtCore.SIGNAL("sliderMoved(int)"), self.setPosition)
+        #self.positionslider = QtGui.QSlider(QtCore.Qt.Horizontal, self)
+        #self.positionslider.setToolTip("Position")
+        #self.positionslider.setMaximum(1000)
+        #self.connect(self.positionslider,
+        #             QtCore.SIGNAL("sliderMoved(int)"), self.setPosition)
 
-        self.hbuttonbox = QtGui.QHBoxLayout()
-        self.playbutton = QtGui.QPushButton("Play")
-        self.hbuttonbox.addWidget(self.playbutton)
-        self.connect(self.playbutton, QtCore.SIGNAL("clicked()"),
-                     self.PlayPause)
+        #self.hbuttonbox = QtGui.QHBoxLayout()
+        #self.playbutton = QtGui.QPushButton("Play")
+        #self.hbuttonbox.addWidget(self.playbutton)
+        #self.connect(self.playbutton, QtCore.SIGNAL("clicked()"),
+        #             self.PlayPause)
 
-        self.stopbutton = QtGui.QPushButton("Stop")
-        self.hbuttonbox.addWidget(self.stopbutton)
-        self.connect(self.stopbutton, QtCore.SIGNAL("clicked()"),
-                     self.Stop)
+        #self.stopbutton = QtGui.QPushButton("Stop")
+        #self.hbuttonbox.addWidget(self.stopbutton)
+        #self.connect(self.stopbutton, QtCore.SIGNAL("clicked()"),
+        #             self.Stop)
 
-        self.hbuttonbox.addStretch(1)
-        self.volumeslider = QtGui.QSlider(QtCore.Qt.Horizontal, self)
-        self.volumeslider.setMaximum(100)
-        self.volumeslider.setValue(self.mediaplayer.audio_get_volume())
-        self.volumeslider.setToolTip("Volume")
-        self.hbuttonbox.addWidget(self.volumeslider)
-        self.connect(self.volumeslider,
-                     QtCore.SIGNAL("valueChanged(int)"),
-                     self.setVolume)
+        #self.hbuttonbox.addStretch(1)
+        #self.volumeslider = QtGui.QSlider(QtCore.Qt.Horizontal, self)
+        #self.volumeslider.setMaximum(100)
+        #self.volumeslider.setValue(self.mediaplayer.audio_get_volume())
+        #self.volumeslider.setToolTip("Volume")
+        #self.hbuttonbox.addWidget(self.volumeslider)
+        #self.connect(self.volumeslider,
+        #             QtCore.SIGNAL("valueChanged(int)"),
+        #             self.setVolume)
 
         self.vboxlayout = QtGui.QVBoxLayout()
         self.vboxlayout.addWidget(self.videoframe)
-        self.vboxlayout.addWidget(self.positionslider)
-        self.vboxlayout.addLayout(self.hbuttonbox)
+        #self.vboxlayout.addWidget(self.positionslider)
+        #self.vboxlayout.addLayout(self.hbuttonbox)
 
         self.widget.setLayout(self.vboxlayout)
 
-        open = QtGui.QAction("&Open", self)
-        self.connect(open, QtCore.SIGNAL("triggered()"), self.OpenFile)
-        exit = QtGui.QAction("&Exit", self)
-        self.connect(exit, QtCore.SIGNAL("triggered()"), sys.exit)
-        menubar = self.menuBar()
-        filemenu = menubar.addMenu("&File")
-        filemenu.addAction(open)
-        filemenu.addSeparator()
-        filemenu.addAction(exit)
+        #open = QtGui.QAction("&Open", self)
+        #self.connect(open, QtCore.SIGNAL("triggered()"), self.OpenFile)
+        #exit = QtGui.QAction("&Exit", self)
+        #self.connect(exit, QtCore.SIGNAL("triggered()"), sys.exit)
+        #menubar = self.menuBar()
+        #filemenu = menubar.addMenu("&File")
+        #filemenu.addAction(open)
+        #filemenu.addSeparator()
+        #filemenu.addAction(exit)
 
         self.timer = QtCore.QTimer(self)
         self.timer.setInterval(200)
@@ -140,24 +112,8 @@ class Player(QtGui.QMainWindow):
     def PlayPause(self):
         """Toggle play/pause status
         """
-        if self.mediaplayer.is_playing():
-            self.mediaplayer.pause()
-            self.playbutton.setText("Play")
-            self.isPaused = True
-        else:
-            if self.mediaplayer.play() == -1:
-                self.OpenFile()
-                return
-            self.mediaplayer.play()
-            self.playbutton.setText("Pause")
-            self.timer.start()
-            self.isPaused = False
-
-    def Stop(self):
-        """Stop player
-        """
-        self.mediaplayer.stop()
-        self.playbutton.setText("Play")
+        self.mediaplayer.play()
+        self.timer.start()
 
     def OpenFile(self, filename=None):
         """Open a media file in a MediaPlayer
@@ -191,77 +147,38 @@ class Player(QtGui.QMainWindow):
         elif sys.platform == "darwin": # for MacOS
             self.mediaplayer.set_nsobject(self.videoframe.winId())
         self.PlayPause()
-
-    def setVolume(self, Volume):
-        """Set the volume
-        """
-        self.mediaplayer.audio_set_volume(Volume)
-
-    def setPosition(self, position):
-        """Set the position
-        """
-        # setting the position to where the slider was dragged
-        self.mediaplayer.set_position(position / 1000.0)
-        # the vlc MediaPlayer needs a float value between 0 and 1, Qt
-        # uses integer variables, so you need a factor; the higher the
-        # factor, the more precise are the results
-        # (1000 should be enough)
+        NM.sendStart()
 
     def updateUI(self):
         """updates the user interface"""
         # setting the slider to the desired position
-        self.positionslider.setValue(self.mediaplayer.get_position() * 1000)
+        #self.positionslider.setValue(self.mediaplayer.get_position() * 1000)
 
         if not self.mediaplayer.is_playing():
             # no need to call this function if nothing is played
             #self.timer.stop()
             self.timer.stop()
             NM.sendStop()
-            time.sleep(1)
-            if not self.isPaused:
-                # after the video finished, the play button stills shows
-                # "Pause", not the desired behavior of a media player
-                # this will fix it
-                self.Stop()
-            #once gesture has been played n+1 times, go onto a new gesture
-            if self.playcount == 6:
-                self.gestureNumber = self.gestureNumber + 1
-                self.playcount = 0
-                #end if all gestures have been played
-                if self.gestureNumber == 30:
-                    NM.sendExit()
-                    time.sleep(0)
-                    self.close()
-                    QtGui.QAction("&Exit", self)
-                    QtCore.QCoreApplication.instance().quit()
-                    sys.exit(0)
-                #otherwise, continue and send new gesture to data capture server
-                else:
-                    NM.newGesture(self.gestures[self.gestureNumber])
-
-            if self.gestureNumber != 30:
-                print 'playcount: ' + str(self.playcount)
-                print 'gesture : ' + self.gestures[self.gestureNumber]
-                filename = self.gestures[self.gestureNumber] + '.mp4'
-                self.OpenFile(filename)
-                if self.playcount != 0:
-                    NM.sendStart()
-                self.playcount = self.playcount + 1
+            NM.sendExit()
+            time.sleep(0)
+            self.close()
+            QtGui.QAction("&Exit", self)
+            QtCore.QCoreApplication.instance().quit()
+            sys.exit(0)
 
 
 
 if __name__ == "__main__":
+
+    videoFile = sys.argv[1] 
     NM = NetworkManager()
 
     app = QtGui.QApplication(sys.argv)
     player = Player()
 
-    NM.newGesture(player.gestures[0])
-
     player.show()
     player.resize(640, 480)
-    if sys.argv[1:]:
-        player.OpenFile(sys.argv[1])
+    player.OpenFile(videoFile)
     player.timer.start()
     #player.OpenFile('./Ext.mp4')
 
