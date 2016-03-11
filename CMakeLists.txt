@@ -7,5 +7,7 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_executable(OpenSonoGestures main.cpp)
 add_executable(SplitClips splitclips.cpp)
+add_executable(MotionGraph motiongraph.cpp)
 target_link_libraries(OpenSonoGestures ${OpenCV_LIBS})
 target_link_libraries(SplitClips ${OpenCV_LIBS})
+target_link_libraries(MotionGraph ${OpenCV_LIBS})
