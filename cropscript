@@ -1,0 +1,1 @@
+ffmpeg -i Segment_0001.mp4 -filter:v "crop=441:345:130:94" -acodec copy cropped.mp4
