@@ -3,6 +3,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/video/tracking.hpp>
+#include <opencv2/core/ocl.hpp>
 
 #include <iostream>
 
@@ -112,6 +113,15 @@ int main(int argc, char** argv)
     if( !cap.isOpened() )
         return -1;
 
+	cv::ocl::setUseOpenCL(true);
+	if  (!cv::ocl::haveOpenCL()){
+		cout  <<  "OpenCL is not available" <<  endl ;
+		exit(0);	
+	}
+	else 
+		cout << "OpenCL available" << endl;
+
+
 	double fps = cap.get(CV_CAP_PROP_FPS);
 	double x_res = cap.get(CV_CAP_PROP_FRAME_WIDTH);
 	double y_res = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
@@ -139,20 +149,27 @@ int main(int argc, char** argv)
     {
         cap >> frame;
 		if (frame.empty()) break;
+		cout << frameCount << endl;
 
         //frame = frame(cropRectangle);
         cvtColor(frame, gray, COLOR_BGR2GRAY);
+		
         GaussianBlur(gray, gray, Size( 5, 5), 0, 0);
 
         if( !prevgray.empty() )
         {
 			//calcOpticalFlowPyrLK();
 			//createOptFlow_DualTVL1();
+			//calcOpticalFlowFarneback(prevgray, gray, uflow, 0.5, 3, 15, 3, 5, 1.2, 0);
 			calcOpticalFlowFarneback(prevgray, gray, uflow, 0.5, 3, 15, 3, 5, 1.2, 0);
+
+			//bool useCL = ocl::useOpenCL();
+			//if(useCL) cout << "OpenCL used" << endl;
+
             cvtColor(prevgray, cflow, COLOR_GRAY2BGR);
             uflow.copyTo(flow);
 			//thresholdFlowMatrix(flow, 1.5);
-			GaussianBlur(flow, flow, Size( 15, 15), 0, 0);
+			//GaussianBlur(flow, flow, Size( 15, 15), 0, 0);
 
 			if(!first){
 				// In order to average the frames
@@ -166,16 +183,16 @@ int main(int argc, char** argv)
 				
 				//add_flow_magnitudes(acc_flow_magnitudes
 				//acc_flow_magnitudes += flow;
-				calcFlowMag(flow, curr_flow_magnitude);
-				imshow("flow mag", curr_flow_magnitude);
+				//calcFlowMag(flow, curr_flow_magnitude);
+				//imshow("flow mag", curr_flow_magnitude);
 				//magnitude(flow[0], flow[1], mag);
-				acc_flow_magnitudes += curr_flow_magnitude;
+				//acc_flow_magnitudes += curr_flow_magnitude;
 					
 			}
 			else{
-				cum_diff = UMat::zeros(gray.rows, gray.cols, CV_8UC1);
-				acc_flow_magnitudes = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
-				curr_flow_magnitude = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
+				//cum_diff = UMat::zeros(gray.rows, gray.cols, CV_8UC1);
+				//acc_flow_magnitudes = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
+				//curr_flow_magnitude = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
 			}
 			prevflow = flow.clone();
 			//cout << flow;
@@ -189,7 +206,7 @@ int main(int argc, char** argv)
 			double sum = sumSqMag(flow);
 			//double sum = sumMagHorizontal(flow);
 			//double sum = cv::sum(gray)[0]/(gray.rows *gray.cols);
-			cout << sum << endl;
+			//cout << sum << endl;
 
 			//absdiff(prevgray, gray, diffgray);
 			

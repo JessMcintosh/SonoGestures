@@ -94,14 +94,15 @@ def press(event):
             print 'navigation mode on'
             toggleClick = True
 
-videoFile = sys.argv[1] 
+#videoFile = sys.argv[1] 
+graphFile = sys.argv[1] 
 
 toggleClick = False
 
 splitPoints = []
 splitLines = []
 
-data = pylab.loadtxt("graph2.txt")
+data = pylab.loadtxt(graphFile)
 
 fig = plt.figure()
 cid = fig.canvas.mpl_connect('button_press_event', onclick)
