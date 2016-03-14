@@ -5,8 +5,16 @@ import sys
 import datetime
 import getopt
 import os
+import csv
 import subprocess
 import scipy.signal
+
+def splitSensor(filename, sensorStart, sensorEnd):
+    open(filename, 'a').close()
+    with open(filename, 'a') as csvfile: 
+        writer = csv.writer(csvfile, delimiter=' ')
+        writer.writerow([sensorStart , sensorEnd])
+            #quotechar='|', quoting=csv.QUOTE_MINIMAL)
 
 
 def splitvideos():
@@ -18,15 +26,16 @@ def splitvideos():
     if videoDir != '':
         os.chdir(videoDir)
 
-
     currentGesture = 0
     currentIteration = 0
 
     if not os.path.exists(gestures[0]):
         os.mkdir(gestures[0])
 
+    sensorPos = sensorLines[0].get_xdata()[0]
+    print 'sensor start position', sensorPos
 
-    for line in splitLines:
+    for line in splitLines[:-1]:
         if currentIteration == numGestPerformed:
             currentGesture += 1
             currentIteration = 0
@@ -36,12 +45,25 @@ def splitvideos():
         endPoint = startPoint + 250        
         print "split : ", startPoint, endPoint
 
-        filename = gestures[currentGesture] + str(currentIteration) + '.avi'
-        outfile = os.path.join(videoDir, gestures[currentGesture], filename)
-        print 'output: ', outfile
+        vfilename = gestures[currentGesture] + str(currentIteration) + '.avi'
+        sfilename = gestures[currentGesture] + str(currentIteration) + '.txt'
+
+        voutfile = os.path.join(gestures[currentGesture], vfilename)
+        soutfile = os.path.join(gestures[currentGesture], sfilename)
+        #voutfile = os.path.join(videoDir, gestures[currentGesture], vfilename)
+        #soutfile = os.path.join(videoDir, gestures[currentGesture], sfilename)
+        print 'output: ', voutfile
 
         currentIteration += 1
-        subprocess.call([programPath, videoFile, str(splitPoints[i]), str(splitPoints[i+1]), outfile])
+        #subprocess.call([programPath, videoFile, str(startPoint), str(endPoint), outfile])
+
+        sensorStart = startPoint - sensorPos
+        sensorEnd = sensorStart + 250
+
+        splitSensor(soutfile, sensorStart, sensorEnd)
+        
+        #subprocess.call([programPath, videoFile, str(splitPoints[i]), str(splitPoints[i+1]), outfile])
+	
 
 
     return
@@ -148,7 +170,7 @@ def press(event):
             toggleAlign = True
             toggleClick = False
 
-#videoFile = sys.argv[1] 
+videoFile = sys.argv[3] 
 graphFile = sys.argv[1] 
 
 sensorFile = sys.argv[2]
