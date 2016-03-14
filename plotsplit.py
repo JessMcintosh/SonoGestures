@@ -140,6 +140,7 @@ splitLines = []
 
 data = pylab.loadtxt(graphFile)
 sensorData = pylab.loadtxt(sensorFile)
+print sensorData
 
 fig = plt.figure()
 cid = fig.canvas.mpl_connect('button_press_event', onclick)
@@ -147,12 +148,11 @@ rid = fig.canvas.mpl_connect('button_release_event', onrelease)
 pid = fig.canvas.mpl_connect('key_press_event', press)
 mid = fig.canvas.mpl_connect('motion_notify_event', motion)
 
-
 ax1 = fig.add_subplot(111)
 
 ax1.plot(data)
 
-sensorLine, = ax1.plot(sensorData)
+sensorLine, = ax1.plot(sensorData[0])
 
 
 numLines = len(gestures)*numGestPerformed*250+250
