@@ -116,7 +116,7 @@ int main(int argc, char** argv)
 	cv::ocl::setUseOpenCL(true);
 	if  (!cv::ocl::haveOpenCL()){
 		cout  <<  "OpenCL is not available" <<  endl ;
-		exit(0);	
+		//exit(0);	
 	}
 	else 
 		cout << "OpenCL available" << endl;

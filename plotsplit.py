@@ -6,26 +6,50 @@ import datetime
 import getopt
 import os
 import subprocess
+import scipy.signal
+
 
 def splitvideos():
 
-    return
-    splitPoints.sort()
-    print splitPoints
-    videoDir = os.path.dirname(videoFile)
     parentPath = os.getcwd()
     programPath = os.path.join(parentPath, 'SplitClips')
-    print programPath
-
+    videoDir = os.path.dirname(videoFile)
 
     if videoDir != '':
         os.chdir(videoDir)
+
 
     currentGesture = 0
     currentIteration = 0
 
     if not os.path.exists(gestures[0]):
         os.mkdir(gestures[0])
+
+
+    for line in splitLines:
+        if currentIteration == numGestPerformed:
+            currentGesture += 1
+            currentIteration = 0
+            if not os.path.exists(gestures[currentGesture]):
+                os.mkdir(gestures[currentGesture])
+        startPoint = line.get_xdata()[0]
+        endPoint = startPoint + 250        
+        print "split : ", startPoint, endPoint
+
+        filename = gestures[currentGesture] + str(currentIteration) + '.avi'
+        outfile = os.path.join(videoDir, gestures[currentGesture], filename)
+        print 'output: ', outfile
+
+        currentIteration += 1
+        subprocess.call([programPath, videoFile, str(splitPoints[i]), str(splitPoints[i+1]), outfile])
+
+
+    return
+    splitPoints.sort()
+    videoDir = os.path.dirname(videoFile)
+    parentPath = os.getcwd()
+    programPath = os.path.join(parentPath, 'SplitClips')
+    print programPath
 
     for i in range(len(splitPoints) - 1):
         if currentIteration == numGestPerformed:
@@ -80,9 +104,10 @@ def motion(event):
                 y = line.get_ydata()
                 line.set_data(x+dx, y+dy)
         else:
-            xdata = sensorLine.get_xdata()
-            ydata = sensorLine.get_ydata()
-            sensorLine.set_data(xdata+dx, ydata+dy)
+            for sensorLine in sensorLines:
+                xdata = sensorLine.get_xdata()
+                ydata = sensorLine.get_ydata()
+                sensorLine.set_data(xdata+dx, ydata+dy)
 
         initX = event.xdata
         initY = event.ydata
@@ -152,12 +177,24 @@ ax1 = fig.add_subplot(111)
 
 ax1.plot(data)
 
-sensorLine, = ax1.plot(sensorData[0])
+sensorData = scipy.signal.resample(sensorData, len(sensorData)*0.73)
 
+sl0, = ax1.plot(sensorData[...,0])
+sl1, = ax1.plot(sensorData[...,1])
+sl2, = ax1.plot(sensorData[...,2])
+sl3, = ax1.plot(sensorData[...,3])
+sl4, = ax1.plot(sensorData[...,4])
+
+sensorLines = []
+sensorLines.append(sl0) 
+sensorLines.append(sl1) 
+sensorLines.append(sl2) 
+sensorLines.append(sl3) 
+sensorLines.append(sl4) 
 
 numLines = len(gestures)*numGestPerformed*250+250
 for i in xrange(0,numLines,250):
-    ln, = plt.plot([i, i], [300, -50], color='k', linestyle='-', linewidth=2)
+    ln, = plt.plot([i, i], [300, -50], color='k', linestyle='-', linewidth=1)
     splitLines.append(ln)
 #splitPoints.append(int(round(initX)))
 
