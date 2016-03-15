@@ -1,12 +1,11 @@
-import SocketServer
 import serial
-import getopt
 import os
 import glob
-import socket
 import sys
 import time
 import datetime
+
+N_ITEMS_PER_LINE = 6
 
 class SerialManager():
 
@@ -35,8 +34,13 @@ class SerialManager():
                         pass
 
         if len(result) > 1:
-                print 'Too many ports to choose from'
-                exit(0)
+                print 'Too many ports, select one manually'
+                currentNumber = 1
+                for port in result:
+                    print str(currentNumber) + ' ' + str(port)
+                    currentNumber+=1
+                portNumber = int( raw_input('port number?'))
+                result = [result[portNumber-1]]
         if len(result) < 1:
                 print 'No ports found'
                 exit(0)
@@ -66,18 +70,16 @@ class SerialManager():
     def startDataCapture(self):
         global storeDir
         print 'starting data capture'
+        
         #send begin packet
-        #print 'sending begin packet'
-        self.ser.write("ready\n")  
+        self.ser.write("b")  
         self.recordData = True
 
-        s1 = []
-        s2 = []
-        s3 = []
-        s4 = []
-        s5 = []
+        #preinit storage of data
+        data = []
+        for x in range(0, N_ITEMS_PER_LINE):
+            data.append( [] )
 
-        #read 300 values of each sensor
         i = 0
         try:
             while(True):
@@ -86,40 +88,29 @@ class SerialManager():
             
                 line = self.ser.readline()
                 print line
-                data = [int(val) for val in line.split()]
-                if(len(data) == 5):
-                        s1.append(data[0])
-                        s2.append(data[1])
-                        s3.append(data[2])
-                        s4.append(data[3])
-                        s5.append(data[4])
+                splitLine = [int(val) for val in line.split()]
+                if(len(splitLine) == N_ITEMS_PER_LINE):
+                        for x in range(0, N_ITEMS_PER_LINE):
+                            data[x].append(splitLine[x])
                         i += 1
                 #else:
                 #	print 'bad data'
         except KeyboardInterrupt:
-
-            self.ser.write("stop\n")  
+            self.ser.write("s")  
 
             #save data to file
-            #write to file
             ts = time.time()
-            filename = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+            filename = datetime.datetime.fromtimestamp(ts).strftime('%Y_%m_%d %H_%M_%S')
 
             if storeDir != '':
                 f = open(os.path.join(storeDir, filename), 'w')
             else:
                 f = open(filename, 'w')
 
-            for i in range(0, len(s1)):
-                f.write(str(s1[i]))
-                f.write(' ')
-                f.write(str(s2[i]))
-                f.write(' ')
-                f.write(str(s3[i]))
-                f.write(' ')
-                f.write(str(s4[i]))
-                f.write(' ')
-                f.write(str(s5[i]))
+            for i in range(0, len(data[0])): #samples
+                for x in range(0, N_ITEMS_PER_LINE): #sensor number
+                    f.write(str(data[x][i]))
+                    f.write(' ')
                 f.write('\n')
             f.close()
 

@@ -1,132 +1,89 @@
-// connect servos to the indicated pins. Send 90a to set the first servo at neutral position. Send 15c to rotate the 3rd servo towards 15deg.
+// 0 -> calibrate on relaxed, 1 -> calibrate closed thumb, 2 -> calibrated closed fingers, b -> begin capture, s -> stop capture
 
-#include <Servo.h>
 
 #define N_SENSORS 5
-#define N_FINGERS 5
 
 unsigned long lastTimeMicro;
-
-int stringBufferIndex = 0;
-char stringBuffer[255];
 boolean readyFlag = false;
-int counter = 0;
-
-#define START = 1
-#define STOP = 0
-
-char bufferByte;
 
 int minVals[N_SENSORS] = {330, 320, 330, 360, 325};
 int maxVals[N_SENSORS] = {600, 500, 600, 650, 650};
-static const int sensorPin[N_SENSORS] = {0,1,2,3,4};
+static const int sensorPin[N_SENSORS] = {0, 1, 2, 3, 4};
 
-int sensorValues[N_SENSORS] = {500,500,500,500,500};
+int sensorValues[N_SENSORS] = {500, 500, 500, 500, 500};
 
 void setup() {
 
-  for(int i = 0; i < N_SENSORS; ++i){
+  for (int i = 0; i < N_SENSORS; ++i) {
     pinMode(sensorPin[i], INPUT);
-  }  
-  
-      // zero out string buffer for serial reads
-    for(int i = 0; i < 255; i++) {
-        stringBuffer[i] = '\0';
-    }
-    stringBufferIndex = 0;
+  }
 
   Serial.begin(9600);
   delay(30);
-  
+
 }
 
-void calibrateRelaxed(){
+void calibrateRelaxed() {
   Serial.println("Calibrating relaxed posture...");
-  for(int i = 0; i < N_SENSORS; ++i)
+  for (int i = 0; i < N_SENSORS; ++i)
     minVals[i] = sensorValues[i];
 }
 
-void calibrateClosedThumb(){
+void calibrateClosedThumb() {
   Serial.println("Calibrating closed thumb...");
   maxVals[0] = sensorValues[0];
 }
-  
-void calibrateClosedFingers(){
+
+void calibrateClosedFingers() {
   Serial.println("Calibrating closed fingers...");
-  for(int i = 1; i < N_SENSORS; ++i)
+  for (int i = 1; i < N_SENSORS; ++i)
     maxVals[i] = sensorValues[i];
 }
 
 void loop() {
-    static int v = 0;
   // send data only when you have received "ready" command:
-  if(readyFlag == true){
-    /*
+  if (readyFlag == true) {
+
+    //write the timestamp
     const unsigned currentMicros = millis();
     Serial.print( currentMicros - lastTimeMicro);
-    Serial.print(" "); */
-   
-    for(int i = 0; i < N_SENSORS; i++){
+    Serial.print(" ");
+
+    //write the data from the sensors
+    for (int i = 0; i < N_SENSORS; i++) {
       // Smoothing to stop jagged movements
-      sensorValues[i] = (sensorValues[i]*0.5)+(analogRead(sensorPin[i])*0.5);
-      v = map(sensorValues[i], minVals[i], maxVals[i], 0, 100);  
+      //sensorValues[i] = (sensorValues[i]*0.5)+(analogRead(sensorPin[i])*0.5);
+
+      sensorValues[i] = analogRead(sensorPin[i]);
+      int v = map(sensorValues[i], minVals[i], maxVals[i], 0, 100);
       v = constrain(v, 0, 100);
       Serial.print(v);
       Serial.print(" ");
     }
+
     Serial.println();
-    delay(50);
+    delay(20);
   }
-} 
+
+}
 
 // called once per loop after loop() function if there is data on the bus
 void serialEvent() {
 
-    int bytes = Serial.available();
-    for( int j = 0; j < bytes; j++ ) {
-      char inChar = (char)Serial.read();
-      if(inChar == '0')
-        calibrateRelaxed();
-      if(inChar == '1')
-        calibrateClosedThumb();
-      if(inChar == '2')
-        calibrateClosedFingers();
-    
-      if( inChar == '\t' || inChar == '\n' || inChar == '\r' || inChar == ' ' ) {
-
-          if(strcmp(stringBuffer, "ready") == 0) {
-            //Serial.print(":READY:\n");
-            // zero out string buffer for serial reads
-            for(int i = 0; i < 255; i++) {
-                stringBuffer[i] = '\0';
-            }
-            stringBufferIndex = 0;
-            lastTimeMicro = millis();
-            readyFlag = true;
-          }
-
-          if(strcmp(stringBuffer, "stop") == 0) {
-            //Serial.print(":STOP:\n");
-            //Serial.print(":Listening...:\n");
-            // zero out string buffer for serial reads
-            for(int i = 0; i < 255; i++) {
-                stringBuffer[i] = '\0';
-            }
-            stringBufferIndex = 0;
-
-            readyFlag = false;
-          }
-
-          // zero out string buffer
-          for(int i = 0; i <= stringBufferIndex; i++) {
-              stringBuffer[i] = '\0';
-          }
-          stringBufferIndex = 0;
-
-
-      } else {
-          stringBuffer[stringBufferIndex] = inChar;
-          stringBufferIndex++;
-      }
+  for (int j = Serial.available(); j >= 0; --j) {
+    char inChar = (char)Serial.read();
+    if (inChar == '0') {
+      calibrateRelaxed();
+    } else if (inChar == '1') {
+      calibrateClosedThumb();
+    } else if (inChar == '2') {
+      calibrateClosedFingers();
+    } else if (inChar == 'b') { //start
+      lastTimeMicro = millis();
+      readyFlag = true;
+    } else if (inChar == 's') { //stop
+      readyFlag = false;
     }
+  }
+
 }
