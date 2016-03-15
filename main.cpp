@@ -142,7 +142,7 @@ int main(int argc, char** argv)
 
         //frame = frame(cropRectangle);
         cvtColor(frame, gray, COLOR_BGR2GRAY);
-        GaussianBlur(gray, gray, Size( 7, 7), 0, 0);
+        GaussianBlur(gray, gray, Size( 5, 5), 0, 0);
 
         if( !prevgray.empty() )
         {
@@ -183,7 +183,7 @@ int main(int argc, char** argv)
             //drawOptFlowMap(flow, cflow, 8, 1.5, Scalar(0, 255, 0));
             drawOptFlowMap(flow, cflow, 16, 1.5, Scalar(0, 255, 0));
 			
-            //imshow("flow", cflow);
+            imshow("flow", cflow);
 			first = 0;
 
 			double sum = sumSqMag(flow);
@@ -198,8 +198,8 @@ int main(int argc, char** argv)
 
         }
         //if(waitKey(30) == 'q')
-        if(waitKey(1) == 'q')
-            break;
+        //if(waitKey(1) == 'q')
+            //break;
         std::swap(prevgray, gray);
     }
 	//imshow("acc flow", acc_flow_magnitudes);
@@ -214,7 +214,9 @@ int main(int argc, char** argv)
 	//imshow("flow acc", norm_magnitudes);
 	imshow("flow sampled", magnitudes_sampled);
 	//imshow("flow", cflow);
-	while(waitKey() != 'q'){}
+	//while(waitKey() != 'q'){}
+	//char c = waitKey();
+	//cout << c;
 			
     return 0;
 }

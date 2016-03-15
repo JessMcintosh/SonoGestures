@@ -20,6 +20,8 @@ int main(int argc, char** argv)
 	char* fileName = argv[4];
 
     VideoCapture cap(argv[1]);
+	cap.set(CV_CAP_PROP_POS_FRAMES, startFrame);
+	//cap.set(CV_CAP_PROP_FPS, 200);
     if( !cap.isOpened() )
         return -1;
 
@@ -27,25 +29,27 @@ int main(int argc, char** argv)
 	double x_res = cap.get(CV_CAP_PROP_FRAME_WIDTH);
 	double y_res = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
 
-	//cout << "fps : " << fps << endl;
+	cout << "fps : " << fps << endl;
 	//cout << "res : " << x_res << "," << y_res << endl;
 
-	Rect cropRectangle(125,90,455,360);
+	//Rect cropRectangle(125,90,455,360);
 
 	VideoWriter outputVideo;
 
 	vector<Mat> split;
 	int ex = static_cast<int>(cap.get(CV_CAP_PROP_FOURCC));
 
-	//outputVideo.open(fileName, CV_FOURCC('F','M','P','4'), fps, Size(x_res,y_res), true);
-	outputVideo.open(fileName, CV_FOURCC('D','I','V','X'), fps, Size(x_res,y_res), true);
+	outputVideo.open(fileName, CV_FOURCC('X','2','6','4'), 50, Size(x_res,y_res), true);
+	//outputVideo.open(fileName, CV_FOURCC('D','I','V','X'), fps, Size(x_res,y_res), true);
 	Mat frame;
 
+	int frameDifference = endFrame - startFrame;
 	int frameCount = 0;
-	for(; frameCount < startFrame; frameCount++){
-		cap >> frame;
-	}
-    for(;frameCount < endFrame; frameCount++)
+	//for(; frameCount < startFrame; frameCount++){
+	//	cap >> frame;
+	//}
+    //for(;frameCount < endFrame; frameCount++)
+    for(;frameCount < frameDifference; frameCount++)
     {
         cap >> frame;
 		if (frame.empty()) break;

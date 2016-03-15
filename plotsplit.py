@@ -10,11 +10,22 @@ import subprocess
 import scipy.signal
 
 def splitSensor(filename, sensorStart, sensorEnd):
+    try:
+        os.remove(filename)
+    except OSError:
+        pass
     open(filename, 'a').close()
     with open(filename, 'a') as csvfile: 
         writer = csv.writer(csvfile, delimiter=' ')
-        writer.writerow([sensorStart , sensorEnd])
-            #quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                #quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for i in xrange(sensorStart, sensorEnd):
+            sensorValues = []
+            for j in xrange(0,5):
+                #sensorValues.append(sensorLine.get_ydata()[i])
+                #print i, sensorLine.get_ydata(True)[i]
+                sensorValues.append(sensorData[i,j])
+                #print i, sensorLine.get_xdata(True)[i]
+            writer.writerow(sensorValues)
 
 
 def splitvideos():
@@ -32,8 +43,8 @@ def splitvideos():
     if not os.path.exists(gestures[0]):
         os.mkdir(gestures[0])
 
-    sensorPos = sensorLines[0].get_xdata()[0]
-    print 'sensor start position', sensorPos
+    #sensorPos = sensorLines[0].get_xdata()[0]
+    #print 'sensor start position', sensorPos
 
     for line in splitLines[:-1]:
         if currentIteration == numGestPerformed:
@@ -55,38 +66,14 @@ def splitvideos():
         print 'output: ', voutfile
 
         currentIteration += 1
-        #subprocess.call([programPath, videoFile, str(startPoint), str(endPoint), outfile])
+        subprocess.call([programPath, videoFile, str(int(startPoint)), str(int(endPoint)), voutfile])
 
-        sensorStart = startPoint - sensorPos
-        sensorEnd = sensorStart + 250
+        #sensorStart = startPoint - sensorPos
+        #sensorEnd = sensorStart + 250
 
-        splitSensor(soutfile, sensorStart, sensorEnd)
+        #splitSensor(soutfile, int(sensorStart), int(sensorEnd))
         
         #subprocess.call([programPath, videoFile, str(splitPoints[i]), str(splitPoints[i+1]), outfile])
-	
-
-
-    return
-    splitPoints.sort()
-    videoDir = os.path.dirname(videoFile)
-    parentPath = os.getcwd()
-    programPath = os.path.join(parentPath, 'SplitClips')
-    print programPath
-
-    for i in range(len(splitPoints) - 1):
-        if currentIteration == numGestPerformed:
-            currentGesture += 1
-            currentIteration = 0
-            if not os.path.exists(gestures[currentGesture]):
-                os.mkdir(gestures[currentGesture])
-        print "split : ", splitPoints[i], splitPoints[i+1]
-
-        filename = gestures[currentGesture] + str(currentIteration) + '.avi'
-        outfile = os.path.join(videoDir, gestures[currentGesture], filename)
-        print 'output: ', outfile
-
-        currentIteration += 1
-        subprocess.call([programPath, videoFile, str(splitPoints[i]), str(splitPoints[i+1]), outfile])
 
 def onclick(event):
     global initX, initY, drag
@@ -171,6 +158,7 @@ def press(event):
             toggleClick = False
 
 videoFile = sys.argv[3] 
+videoFile = os.path.realpath(videoFile)
 graphFile = sys.argv[1] 
 
 sensorFile = sys.argv[2]
@@ -201,18 +189,18 @@ ax1.plot(data)
 
 sensorData = scipy.signal.resample(sensorData, len(sensorData)*0.73)
 
-sl0, = ax1.plot(sensorData[...,0])
-sl1, = ax1.plot(sensorData[...,1])
-sl2, = ax1.plot(sensorData[...,2])
-sl3, = ax1.plot(sensorData[...,3])
-sl4, = ax1.plot(sensorData[...,4])
-
-sensorLines = []
-sensorLines.append(sl0) 
-sensorLines.append(sl1) 
-sensorLines.append(sl2) 
-sensorLines.append(sl3) 
-sensorLines.append(sl4) 
+#sl0, = ax1.plot(sensorData[...,0])
+#sl1, = ax1.plot(sensorData[...,1])
+#sl2, = ax1.plot(sensorData[...,2])
+#sl3, = ax1.plot(sensorData[...,3])
+#sl4, = ax1.plot(sensorData[...,4])
+#
+#sensorLines = []
+#sensorLines.append(sl0) 
+#sensorLines.append(sl1) 
+#sensorLines.append(sl2) 
+#sensorLines.append(sl3) 
+#sensorLines.append(sl4) 
 
 numLines = len(gestures)*numGestPerformed*250+250
 for i in xrange(0,numLines,250):
