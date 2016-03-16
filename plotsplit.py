@@ -20,7 +20,7 @@ def splitSensor(filename, sensorStart, sensorEnd):
                 #quotechar='|', quoting=csv.QUOTE_MINIMAL)
         for i in xrange(sensorStart, sensorEnd):
             sensorValues = []
-            for j in xrange(0,5):
+            for j in xrange(1,6):
                 #sensorValues.append(sensorLine.get_ydata()[i])
                 #print i, sensorLine.get_ydata(True)[i]
                 sensorValues.append(sensorData[i,j])
@@ -189,11 +189,11 @@ ax1.plot(data)
 
 sensorData = scipy.signal.resample(sensorData, len(sensorData)*0.73)
 
-#sl0, = ax1.plot(sensorData[...,0])
-#sl1, = ax1.plot(sensorData[...,1])
-#sl2, = ax1.plot(sensorData[...,2])
-#sl3, = ax1.plot(sensorData[...,3])
-#sl4, = ax1.plot(sensorData[...,4])
+#sl0, = ax1.plot(sensorData[...,1])
+#sl1, = ax1.plot(sensorData[...,2])
+#sl2, = ax1.plot(sensorData[...,3])
+#sl3, = ax1.plot(sensorData[...,4])
+#sl4, = ax1.plot(sensorData[...,5])
 #
 #sensorLines = []
 #sensorLines.append(sl0) 
