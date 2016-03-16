@@ -39,7 +39,7 @@ class SerialManager():
                 for port in result:
                     print str(currentNumber) + ' ' + str(port)
                     currentNumber+=1
-                portNumber = int( raw_input('port number?'))
+                portNumber = int( input('port number?'))
                 result = [result[portNumber-1]]
         if len(result) < 1:
                 print 'No ports found'

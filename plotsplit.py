@@ -1,14 +1,45 @@
 import matplotlib.pyplot as plt
-import numpy as np
 import pylab
 import sys
-import datetime
-import getopt
 import os
 import csv
 import subprocess
-import scipy.signal
 
+SAMPLING_FR = 1000 / 50 #50 FPS
+
+
+#uniformly resamples the matrix data using data[][0] as the timestamps
+# the returned data still contains the timestamp (uniform now) in data[][0]
+def resampleUniform(data, samplingPeriod):
+    rows = len(data[0])
+    columns = len(data)
+    
+    r = []
+        
+    currentTime = data[0][0]
+    currentIndex = 0
+       
+    while currentIndex < columns:
+        while currentIndex < columns and (currentTime > data[currentIndex][0]):
+            currentIndex += 1
+        
+        if currentIndex < columns-1:
+            aTime = data[currentIndex][0]
+            bTime = data[currentIndex+1][0]
+            pTime = (currentTime - aTime) / (bTime - aTime)
+            row = [currentTime]
+            for i in range(1, rows):
+                currentValue = data[currentIndex][i]
+                nextValue = data[currentIndex+1][i]
+                interp = currentValue + (nextValue-currentValue)*pTime
+                row.append( interp )
+            r.append( row )
+        currentTime += samplingPeriod
+        
+    return r
+
+
+    
 def splitSensor(filename, sensorStart, sensorEnd):
     try:
         os.remove(filename)
@@ -18,9 +49,9 @@ def splitSensor(filename, sensorStart, sensorEnd):
     with open(filename, 'a') as csvfile: 
         writer = csv.writer(csvfile, delimiter=' ')
                 #quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        for i in xrange(sensorStart, sensorEnd):
+        for i in range(sensorStart, sensorEnd):
             sensorValues = []
-            for j in xrange(1,6):
+            for j in range(1,6):
                 #sensorValues.append(sensorLine.get_ydata()[i])
                 #print i, sensorLine.get_ydata(True)[i]
                 sensorValues.append(sensorData[i,j])
@@ -29,7 +60,6 @@ def splitSensor(filename, sensorStart, sensorEnd):
 
 
 def splitvideos():
-
     parentPath = os.getcwd()
     programPath = os.path.join(parentPath, 'SplitClips')
     videoDir = os.path.dirname(videoFile)
@@ -157,11 +187,14 @@ def press(event):
             toggleAlign = True
             toggleClick = False
 
+if len(sys.argv != 4):
+    print 'Usage: ' + sys.argv[0] + ' magnitudesFile sensorFile videoFile'
+    exit()
+
+graphFile = sys.argv[1] 
+sensorFile = sys.argv[2]  
 videoFile = sys.argv[3] 
 videoFile = os.path.realpath(videoFile)
-graphFile = sys.argv[1] 
-
-sensorFile = sys.argv[2]
 
 gestures = ('thumb','index','middle','ring','fist','point','call','gun','flex','adduct')
 numGestPerformed = 5
@@ -187,7 +220,7 @@ ax1 = fig.add_subplot(111)
 
 ax1.plot(data)
 
-sensorData = scipy.signal.resample(sensorData, len(sensorData)*0.73)
+sensorData = resampleUniform(sensorData, SAMPLING_FR)
 
 #sl0, = ax1.plot(sensorData[...,1])
 #sl1, = ax1.plot(sensorData[...,2])
@@ -203,7 +236,7 @@ sensorData = scipy.signal.resample(sensorData, len(sensorData)*0.73)
 #sensorLines.append(sl4) 
 
 numLines = len(gestures)*numGestPerformed*250+250
-for i in xrange(0,numLines,250):
+for i in range(0,numLines,250):
     ln, = plt.plot([i, i], [300, -50], color='k', linestyle='-', linewidth=1)
     splitLines.append(ln)
 #splitPoints.append(int(round(initX)))

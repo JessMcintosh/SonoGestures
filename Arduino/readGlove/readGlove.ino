@@ -26,18 +26,18 @@ void setup() {
 void calibrateRelaxed() {
   Serial.println("Calibrating relaxed posture...");
   for (int i = 0; i < N_SENSORS; ++i)
-    minVals[i] = sensorValues[i];
+    minVals[i] = analogRead(sensorPin[i]);
 }
 
 void calibrateClosedThumb() {
   Serial.println("Calibrating closed thumb...");
-  maxVals[0] = sensorValues[0];
+  maxVals[0] = analogRead(sensorPin[0]);
 }
 
 void calibrateClosedFingers() {
   Serial.println("Calibrating closed fingers...");
   for (int i = 1; i < N_SENSORS; ++i)
-    maxVals[i] = sensorValues[i];
+    maxVals[i] = analogRead(sensorPin[i]);
 }
 
 void loop() {
