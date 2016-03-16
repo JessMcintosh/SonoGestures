@@ -124,41 +124,59 @@ int main(int argc, char** argv)
 	Mat acc_flow_magnitudes;
 	Mat curr_flow_magnitude;
 
+	UMat img;
     Mat flow, cflow, frame, prevflow;
     UMat gray, prevgray, uflow;
-	UMat diffgray;
-	UMat cum_diff;
-    namedWindow("flow", 1);
-	Rect cropRectangle(125,90,455,360);
+	//UMat diffgray;
+	///UMat cum_diff;
+    //namedWindow("flow", 1);
+	//Rect cropRectangle(125,90,455,360);
 	//double alpha = 0.6;
-	double alpha = 0.9;
+	double alpha = 0.8;
 	double beta = (1.0 - alpha);
 	bool first = 1;
 	int frameCount = 0;
 
     for(;;frameCount++)
     {
-		//if(frameCount > 10) break;
+		//if(frameCount > 4) break;
 
         cap >> frame;
 		if (frame.empty()) break;
+		//frame.copyTo(img);
 
         //frame = frame(cropRectangle);
+		//extractChannel(frame, gray, 0);
         cvtColor(frame, gray, COLOR_BGR2GRAY);
-        GaussianBlur(gray, gray, Size( 5, 5), 0, 0);
+		
+        //GaussianBlur(gray, gray, Size( 5, 5), 0, 0);
 
         if( !prevgray.empty() )
         {
 			//calcOpticalFlowPyrLK();
 			//createOptFlow_DualTVL1();
-			calcOpticalFlowFarneback(prevgray, gray, uflow, 0.5, 3, 15, 3, 5, 1.2, 0);
+			if(first)
+				calcOpticalFlowFarneback(prevgray, gray, uflow, 0.5, 3, 15, 4, 5, 1.2, 0);
+			else
+				calcOpticalFlowFarneback(prevgray, gray, uflow, 0.5, 2, 15, 3, 5, 1.2, OPTFLOW_USE_INITIAL_FLOW );
+
+
+			//calcOpticalFlowFarneback(prevgray, gray, uflow, 0.5, 3, 15, 3, 5, 1.2, 0);
             cvtColor(prevgray, cflow, COLOR_GRAY2BGR);
             uflow.copyTo(flow);
 			//thresholdFlowMatrix(flow, 1.5);
 			GaussianBlur(flow, flow, Size( 15, 15), 0, 0);
 
+            //drawOptFlowMap(flow, cflow, 16, 1.5, Scalar(0, 255, 0));
+			//imshow("flow", cflow);
+
+			calcFlowMag(flow, curr_flow_magnitude);
+			acc_flow_magnitudes += curr_flow_magnitude;
+
+			
 			if(!first){
 				// In order to average the frames
+				//addWeighted(prevflow, alpha, flow, beta, 0.0, flow);
 				addWeighted(prevflow, alpha, flow, beta, 0.0, flow);
 				//absdiff(prevgray, gray, diffgray);
 				//addWeighted(cum_diff, 0.7, diffgray, 0.3, 0.0, cum_diff);
@@ -166,28 +184,29 @@ int main(int argc, char** argv)
 
 				//double sum = pow((cv::sum(diffgray)[0]/10000.0),2);
 				//cout << sum << endl;
-				
 				//add_flow_magnitudes(acc_flow_magnitudes
 				//acc_flow_magnitudes += flow;
-				calcFlowMag(flow, curr_flow_magnitude);
+				//calcFlowMag(flow, curr_flow_magnitude);
 				//imshow("flow mag", curr_flow_magnitude);
 				//magnitude(flow[0], flow[1], mag);
-				acc_flow_magnitudes += curr_flow_magnitude;
+				//acc_flow_magnitudes += curr_flow_magnitude;
 					
 			}
-			else{
-				//cum_diff = UMat::zeros(gray.rows, gray.cols, CV_8UC1);
-				acc_flow_magnitudes = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
-				curr_flow_magnitude = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
-			}
+			//else{
+			//	//cum_diff = UMat::zeros(gray.rows, gray.cols, CV_8UC1);
+			//	acc_flow_magnitudes = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
+			//	curr_flow_magnitude = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
+			//}
 			prevflow = flow.clone();
+			first = 0;
+			
+
 			//cout << flow;
 
             //drawOptFlowMap(flow, cflow, 8, 1.5, Scalar(0, 255, 0));
             //drawOptFlowMap(flow, cflow, 16, 1.5, Scalar(0, 255, 0));
 			
             //imshow("flow", cflow);
-			first = 0;
 
 			//double sum = sumSqMag(flow);
 			//double sum = sumMagHorizontal(flow);
@@ -200,9 +219,12 @@ int main(int argc, char** argv)
 			
 
         }
+		else{
+			acc_flow_magnitudes = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
+			curr_flow_magnitude = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
+		}
         //if(waitKey(30) == 'q')
-        //if(waitKey(1) == 'q')
-            //break;
+        //if(waitKey(1) == 'q') break;
         std::swap(prevgray, gray);
     }
 	//imshow("acc flow", acc_flow_magnitudes);
@@ -215,7 +237,7 @@ int main(int argc, char** argv)
 	sampleMatrix(magnitudes_sampled, magnitudes_sampled, 32);
 
 	//imshow("flow acc", norm_magnitudes);
-	imshow("flow sampled", magnitudes_sampled);
+	//imshow("flow sampled", magnitudes_sampled);
 	//imshow("flow", cflow);
 	//while(waitKey() != 'q'){}
 	//char c = waitKey();

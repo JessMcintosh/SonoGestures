@@ -9,10 +9,10 @@ import subprocess
 import csv
 import numpy as np
 
-def extract(file, programPath):
-
+def readFeatures(file):
     features = []
-    result = subprocess.check_output([programPath, file])
+    f = open(file)
+    result = f.read()
     for token in result.split():
         try:
             features.append(float(token))
@@ -22,6 +22,12 @@ def extract(file, programPath):
     #features = re.findall("\d+\.\d+", result)
 
     return features
+
+def extract(file, programPath):
+
+    return subprocess.check_output([programPath, file])
+
+
 
 def extract_features(data):
     feature_vector = []

@@ -9,6 +9,7 @@ import subprocess
 import extract
 import numpy as np
 import itertools
+from GraphConfusionMatrix import plot_confusion_matrix
 from sklearn import preprocessing
 from sklearn.metrics import confusion_matrix
 from sklearn import svm
@@ -33,8 +34,6 @@ gestures = [gesturesAll]
 
 def cross_validate(gestures, originalPath):
 
-        programPath = os.path.join(originalPath, "OpenSonoGestures")
-        
 	parentPath = os.getcwd()
 
 	#os.chdir(trainingDir)
@@ -43,14 +42,14 @@ def cross_validate(gestures, originalPath):
 	
 	for i in os.listdir(os.getcwd()):
 		if i in gestures:
-			print i
+			#print i
 			os.chdir(parentPath + "/" + i)
 			for dataFile in os.listdir(os.getcwd()):
-				print dataFile
-                                realpath = os.path.realpath(dataFile)
-                                print realpath
+				#print dataFile
+				realpath = os.path.realpath(dataFile)
+				#print realpath
 				startfeature = time.time()
-				result = extract.extract(realpath, programPath)
+				result = extract.readFeatures(realpath)
 				endfeature = time.time()
 				featuretime = endfeature - startfeature
 				features.append(result)
@@ -122,16 +121,16 @@ def cross_validate(gestures, originalPath):
 
 		best_C = grid.best_params_['C']
 		best_G = grid.best_params_['gamma']
-		print("The best parameters are %s with a score of %0.2f"
-					   % (grid.best_params_, grid.best_score_))
+		#print("The best parameters are %s with a score of %0.2f"
+		#			   % (grid.best_params_, grid.best_score_))
 
 
-		start = time.time()
+		#start = time.time()
 		clf = svm.SVC(C=best_C,gamma=best_G)
 		clfoutput = clf.fit(trainingSet, trainingLabels)
 		result = clf.predict(testingSet)
-		end = time.time()
-		print end-start + featuretime
+		#end = time.time()
+		#print end-start + featuretime
 		predictions.append(result.tolist())
 		
 		num_correct = 0
@@ -205,7 +204,8 @@ def cross_validate(gestures, originalPath):
 	#print linear_true
 
 	c_matrix = confusion_matrix(linear_true, linear_pred) 
-	#print c_matrix
+	print c_matrix
+        plot_confusion_matrix(c_matrix,"confusionmatrix")
 
 	return rate, c_matrix
 
@@ -214,7 +214,7 @@ def validate_participant(directory):
 	c_matrices = []
 
 	originalWorkingPath = os.getcwd()
-	os.chdir(directory)
+	os.chdir(os.path.join(directory, "features/"))
 	print 'validating:', directory
 	for r in gestures:
 		#print r[1]
@@ -243,13 +243,17 @@ if __name__ == '__main__':
 
 	#for i in range (2,4):
 	dirs = []
-	dirs.append("/home/schmonit/Drive/SonicGesturesData/08-03-2016/dpa/")
-	dirs.append("/home/schmonit/Drive/SonicGesturesData/08-03-2016/lpa/")
-	dirs.append("/home/schmonit/Drive/SonicGesturesData/08-03-2016/tda/")
-	dirs.append("/home/schmonit/Drive/SonicGesturesData/08-03-2016/tpa/")
-	dirs.append("/home/schmonit/Drive/SonicGesturesData/08-03-2016/tpp/")
+	dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/dpa/")
+	dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/lpa/")
+	dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/tda/")
+	dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/tpa/")
+	dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/tpp/")
 
 	cv_rates, c_matrices = validate_participant(dirs[0])
+	cv_rates, c_matrices = validate_participant(dirs[1])
+	cv_rates, c_matrices = validate_participant(dirs[2])
+	cv_rates, c_matrices = validate_participant(dirs[3])
+	cv_rates, c_matrices = validate_participant(dirs[4])
 	all_c_matrices.append(c_matrices)
 
 
@@ -278,5 +282,3 @@ if __name__ == '__main__':
 	#			 else:
 	#				 print '%d' % z
 	#print all_c_matrices
-	#print sum_c_matrices
-
