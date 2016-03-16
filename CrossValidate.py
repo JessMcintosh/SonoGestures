@@ -6,7 +6,7 @@ import sys
 import getopt
 import os
 import subprocess
-#import extract
+import extract
 import numpy as np
 import itertools
 from sklearn import preprocessing
@@ -31,10 +31,10 @@ gestures = [gesturesAll]
 
 #trainingDirs = [trainingDirAll, trainingDirEMG, trainingDirFSR]
 
-def cross_validate(gestures):
+def cross_validate(gestures, originalPath):
 
-# loop through the csv files, and store into 2D array
-
+        programPath = os.path.join(originalPath, "OpenSonoGestures")
+        
 	parentPath = os.getcwd()
 
 	#os.chdir(trainingDir)
@@ -46,14 +46,16 @@ def cross_validate(gestures):
 			print i
 			os.chdir(parentPath + "/" + i)
 			for dataFile in os.listdir(os.getcwd()):
-				#startfeature = time.time()
-				#result = extract.extract(dataFile)
-				#endfeature = time.time()
-				#featuretime = endfeature - startfeature
-				#features.append(result)
 				print dataFile
+                                realpath = os.path.realpath(dataFile)
+                                print realpath
+				startfeature = time.time()
+				result = extract.extract(realpath, programPath)
+				endfeature = time.time()
+				featuretime = endfeature - startfeature
+				features.append(result)
 
-	#features_scaled = (preprocessing.scale(features)).tolist()
+	features_scaled = (preprocessing.scale(features)).tolist()
 	#print np.round(features_scaled, 2)
 	#print np.round(features, 1)
 	os.chdir(parentPath)
@@ -61,11 +63,9 @@ def cross_validate(gestures):
 	predictions = []
 	cum_rate = 0.0
 
-	return 0,0
-
 # loop through 10 times
-	for i in range(10):
-		#print 'fold' , i 
+	for i in range(5):
+		print 'fold' , i 
 # select subset of features for the fold
 		count = 0
 		trainingSet		= []
@@ -81,9 +81,9 @@ def cross_validate(gestures):
 		#	 print feature_vector 
 
 		for feature_vector in features_scaled:
-			if count%10 == 0:
+			if count%5 == 0:
 				currentGesture += 1
-			if count%10 == i:
+			if count%5 == i:
 				testingSet.append(feature_vector)
 				testingLabels.append(currentGesture)
 			else:
@@ -110,7 +110,7 @@ def cross_validate(gestures):
 		C_range = np.logspace(-2, 10, num=13, base=2)
 		gamma_range = np.logspace(-5, 1, num=7, base=10)
 		param_grid = dict(gamma=gamma_range, C=C_range)
-		cv = StratifiedShuffleSplit(trainingLabels, n_iter=3, test_size=0.11, random_state=42)
+		cv = StratifiedShuffleSplit(trainingLabels, n_iter=3, test_size=0.31, random_state=42)
 		grid = GridSearchCV(svm.SVC(), param_grid=param_grid, cv=cv)
 		grid.fit(trainingSet, trainingLabels)
 		#C_range = np.logspace(-1, 1, num=2, base=2)
@@ -122,8 +122,8 @@ def cross_validate(gestures):
 
 		best_C = grid.best_params_['C']
 		best_G = grid.best_params_['gamma']
-		#print("The best parameters are %s with a score of %0.2f"
-		#			   % (grid.best_params_, grid.best_score_))
+		print("The best parameters are %s with a score of %0.2f"
+					   % (grid.best_params_, grid.best_score_))
 
 
 		start = time.time()
@@ -141,7 +141,7 @@ def cross_validate(gestures):
 
 
 		percentage = (float(num_correct) * 100.0) / float(len(gestures))
-		#print 'percentage: ' , percentage
+		print 'percentage: ' , percentage
 		best_percentage = percentage
 
 #		 for params in itertools.product(C_values, gamma_values):
@@ -189,9 +189,9 @@ def cross_validate(gestures):
 		#print p_val
 	#print predictions
 
-	rate = cum_rate / 10.0
+	rate = cum_rate / 5.0
 
-	#print np.round(rate,2), '%'
+	print np.round(rate,2), '%'
 	linear_pred = []
 	linear_true = []
 	for i in predictions:
@@ -218,7 +218,7 @@ def validate_participant(directory):
 	print 'validating:', directory
 	for r in gestures:
 		#print r[1]
-		cv_rate, c_matrix = cross_validate(r)
+		cv_rate, c_matrix = cross_validate(r, originalWorkingPath)
 		cv_rates.append(cv_rate)
 		c_matrices.append(c_matrix)
 		print(np.round(cv_rate,2))
@@ -243,11 +243,11 @@ if __name__ == '__main__':
 
 	#for i in range (2,4):
 	dirs = []
-	dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/dpa/")
-	dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/lpa/")
-	dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/tda/")
-	dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/tpa/")
-	dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/tpp/")
+	dirs.append("/home/schmonit/Drive/SonicGesturesData/08-03-2016/dpa/")
+	dirs.append("/home/schmonit/Drive/SonicGesturesData/08-03-2016/lpa/")
+	dirs.append("/home/schmonit/Drive/SonicGesturesData/08-03-2016/tda/")
+	dirs.append("/home/schmonit/Drive/SonicGesturesData/08-03-2016/tpa/")
+	dirs.append("/home/schmonit/Drive/SonicGesturesData/08-03-2016/tpp/")
 
 	cv_rates, c_matrices = validate_participant(dirs[0])
 	all_c_matrices.append(c_matrices)

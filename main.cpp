@@ -99,7 +99,8 @@ void sampleMatrix(Mat& magnitudes, Mat& result, int step){
 				for (int j = 0; j < step; j++)
 					result.at<float>(y+i,x+j) = avg;
 
-			cout << count << ":" << avg << " ";
+			cout << avg << " ";
+			//cout << count << ":" << avg << " ";
 			count ++;
 		}
 	}
@@ -137,6 +138,8 @@ int main(int argc, char** argv)
 
     for(;;frameCount++)
     {
+		//if(frameCount > 10) break;
+
         cap >> frame;
 		if (frame.empty()) break;
 
@@ -152,7 +155,7 @@ int main(int argc, char** argv)
             cvtColor(prevgray, cflow, COLOR_GRAY2BGR);
             uflow.copyTo(flow);
 			//thresholdFlowMatrix(flow, 1.5);
-			GaussianBlur(flow, flow, Size( 31, 31), 0, 0);
+			GaussianBlur(flow, flow, Size( 15, 15), 0, 0);
 
 			if(!first){
 				// In order to average the frames
@@ -167,13 +170,13 @@ int main(int argc, char** argv)
 				//add_flow_magnitudes(acc_flow_magnitudes
 				//acc_flow_magnitudes += flow;
 				calcFlowMag(flow, curr_flow_magnitude);
-				imshow("flow mag", curr_flow_magnitude);
+				//imshow("flow mag", curr_flow_magnitude);
 				//magnitude(flow[0], flow[1], mag);
 				acc_flow_magnitudes += curr_flow_magnitude;
 					
 			}
 			else{
-				cum_diff = UMat::zeros(gray.rows, gray.cols, CV_8UC1);
+				//cum_diff = UMat::zeros(gray.rows, gray.cols, CV_8UC1);
 				acc_flow_magnitudes = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
 				curr_flow_magnitude = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
 			}
@@ -181,12 +184,12 @@ int main(int argc, char** argv)
 			//cout << flow;
 
             //drawOptFlowMap(flow, cflow, 8, 1.5, Scalar(0, 255, 0));
-            drawOptFlowMap(flow, cflow, 16, 1.5, Scalar(0, 255, 0));
+            //drawOptFlowMap(flow, cflow, 16, 1.5, Scalar(0, 255, 0));
 			
-            imshow("flow", cflow);
+            //imshow("flow", cflow);
 			first = 0;
 
-			double sum = sumSqMag(flow);
+			//double sum = sumSqMag(flow);
 			//double sum = sumMagHorizontal(flow);
 			//double sum = cv::sum(gray)[0]/(gray.rows *gray.cols);
 			//cout << sum << endl;
@@ -205,7 +208,7 @@ int main(int argc, char** argv)
 	//imshow("acc flow", acc_flow_magnitudes);
 	//drawAccFlowMap(acc_flow_magnitudes, cflow, 16, 1.5, Scalar(0, 255, 0));
 	Mat norm_magnitudes;
-    acc_flow_magnitudes.convertTo(norm_magnitudes, CV_32FC1, 1.0/(frameCount*2.0));	
+    acc_flow_magnitudes.convertTo(norm_magnitudes, CV_32FC1, 1.0/(frameCount));	
 	Mat magnitudes_sampled;
 	magnitudes_sampled = norm_magnitudes.clone();
 	//sampleMatrix(magnitudes_sampled, magnitudes_sampled, 16);
