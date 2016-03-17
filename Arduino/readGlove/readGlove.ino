@@ -45,7 +45,7 @@ void loop() {
   if (readyFlag == true) {
 
     //write the timestamp
-    const unsigned currentMicros = millis();
+    const unsigned long currentMicros = millis();
     Serial.print( currentMicros - lastTimeMicro);
     Serial.print(" ");
 
