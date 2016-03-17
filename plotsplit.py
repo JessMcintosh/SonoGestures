@@ -187,7 +187,7 @@ def press(event):
             toggleAlign = True
             toggleClick = False
 
-if len(sys.argv != 4):
+if len(sys.argv) != 4:
     print 'Usage: ' + sys.argv[0] + ' magnitudesFile sensorFile videoFile'
     exit()
 
