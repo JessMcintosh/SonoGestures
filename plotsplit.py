@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import pylab
 import sys
 import os
@@ -15,7 +16,8 @@ def resampleUniform(data, samplingPeriod):
     rows = len(data[0])
     columns = len(data)
     
-    r = []
+    #r = np.array()
+    r = [] 
         
     currentTime = data[0][0]
     currentIndex = 0
@@ -221,8 +223,11 @@ ax1 = fig.add_subplot(111)
 
 ax1.plot(data)
 
-#sensorData = resampleUniform(sensorData, SAMPLING_FR)
-sensorData = scipy.signal.resample(sensorData, len(sensorData)*1.097)
+sensorData = resampleUniform(sensorData, SAMPLING_FR)
+#sensorData = scipy.signal.resample(sensorData, len(sensorData)*1.097)
+
+sensorData = np.array(sensorData)
+
 
 sl0, = ax1.plot(sensorData[...,1])
 sl1, = ax1.plot(sensorData[...,2])
