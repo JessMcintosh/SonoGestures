@@ -52,7 +52,7 @@ class SerialManager():
         print 'Connecting...'
 
         try:
-                self.ser = serial.Serial(strPort, 9600)
+                self.ser = serial.Serial(strPort, 19200)
         except:
                 print 'Unable to connect to the Arduino via Serial'
                 exit(1)

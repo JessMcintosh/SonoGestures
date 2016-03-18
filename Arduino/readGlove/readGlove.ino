@@ -18,7 +18,7 @@ void setup() {
     pinMode(sensorPin[i], INPUT);
   }
 
-  Serial.begin(9600);
+  Serial.begin(19200);
   delay(30);
 
 }
