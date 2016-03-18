@@ -4,6 +4,7 @@ import sys
 import os
 import csv
 import subprocess
+import scipy.signal
 
 SAMPLING_FR = 1000 / 50 #50 FPS
 
@@ -220,20 +221,21 @@ ax1 = fig.add_subplot(111)
 
 ax1.plot(data)
 
-sensorData = resampleUniform(sensorData, SAMPLING_FR)
+#sensorData = resampleUniform(sensorData, SAMPLING_FR)
+sensorData = scipy.signal.resample(sensorData, len(sensorData)*1.097)
 
-#sl0, = ax1.plot(sensorData[...,1])
-#sl1, = ax1.plot(sensorData[...,2])
-#sl2, = ax1.plot(sensorData[...,3])
-#sl3, = ax1.plot(sensorData[...,4])
-#sl4, = ax1.plot(sensorData[...,5])
-#
-#sensorLines = []
-#sensorLines.append(sl0) 
-#sensorLines.append(sl1) 
-#sensorLines.append(sl2) 
-#sensorLines.append(sl3) 
-#sensorLines.append(sl4) 
+sl0, = ax1.plot(sensorData[...,1])
+sl1, = ax1.plot(sensorData[...,2])
+sl2, = ax1.plot(sensorData[...,3])
+sl3, = ax1.plot(sensorData[...,4])
+sl4, = ax1.plot(sensorData[...,5])
+
+sensorLines = []
+sensorLines.append(sl0) 
+sensorLines.append(sl1) 
+sensorLines.append(sl2) 
+sensorLines.append(sl3) 
+sensorLines.append(sl4) 
 
 numLines = len(gestures)*numGestPerformed*250+250
 for i in range(0,numLines,250):

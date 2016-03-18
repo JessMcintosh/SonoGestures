@@ -115,11 +115,11 @@ int main(int argc, char** argv)
 
 	cv::ocl::setUseOpenCL(true);
 	if  (!cv::ocl::haveOpenCL()){
-		cout  <<  "OpenCL is not available" <<  endl ;
-		//exit(0);	
+		//cout  <<  "OpenCL is not available" <<  endl ;
+		exit(0);	
 	}
-	else 
-		cout << "OpenCL available" << endl;
+	//else 
+	//	cout << "OpenCL available" << endl;
 
 
 	double fps = cap.get(CV_CAP_PROP_FPS);
@@ -173,7 +173,8 @@ int main(int argc, char** argv)
 
 			if(!first){
 				// In order to average the frames
-				addWeighted(prevflow, alpha, flow, beta, 0.0, flow);
+				//addWeighted(prevflow, alpha, flow, beta, 0.0, flow);
+
 				//absdiff(prevgray, gray, diffgray);
 				//addWeighted(cum_diff, 0.7, diffgray, 0.3, 0.0, cum_diff);
 				//addWeighted(cum_diff, 0.1, diffgray, 0.9, 0.0, cum_diff);
@@ -194,7 +195,7 @@ int main(int argc, char** argv)
 				//acc_flow_magnitudes = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
 				//curr_flow_magnitude = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
 			}
-			prevflow = flow.clone();
+			//prevflow = flow.clone();
 			//cout << flow;
 
             //drawOptFlowMap(flow, cflow, 8, 1.5, Scalar(0, 255, 0));
@@ -206,7 +207,7 @@ int main(int argc, char** argv)
 			double sum = sumSqMag(flow);
 			//double sum = sumMagHorizontal(flow);
 			//double sum = cv::sum(gray)[0]/(gray.rows *gray.cols);
-			//cout << sum << endl;
+			cout << sum << endl;
 
 			//absdiff(prevgray, gray, diffgray);
 			

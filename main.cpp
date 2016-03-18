@@ -204,9 +204,9 @@ int main(int argc, char** argv)
 			//cout << flow;
 
             //drawOptFlowMap(flow, cflow, 8, 1.5, Scalar(0, 255, 0));
-            //drawOptFlowMap(flow, cflow, 16, 1.5, Scalar(0, 255, 0));
+            drawOptFlowMap(flow, cflow, 16, 1.5, Scalar(0, 255, 0));
 			
-            //imshow("flow", cflow);
+            imshow("flow", cflow);
 
 			//double sum = sumSqMag(flow);
 			//double sum = sumMagHorizontal(flow);
@@ -224,7 +224,7 @@ int main(int argc, char** argv)
 			curr_flow_magnitude = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
 		}
         //if(waitKey(30) == 'q')
-        //if(waitKey(1) == 'q') break;
+        if(waitKey(1) == 'q') break;
         std::swap(prevgray, gray);
     }
 	//imshow("acc flow", acc_flow_magnitudes);
