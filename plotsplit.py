@@ -75,25 +75,30 @@ def splitvideos():
 
     currentGesture = 0
     currentIteration = 0
+    extensionNumber = 0
 
     if not os.path.exists(gestures[0]):
         os.mkdir(gestures[0])
 
-    #sensorPos = sensorLines[0].get_xdata()[0]
+    sensorPos = sensorLines[0].get_xdata()[0]
     #print 'sensor start position', sensorPos
 
     for line in splitLines[:-1]:
         if currentIteration == numGestPerformed:
             currentGesture += 1
             currentIteration = 0
+            if currentGesture > 9:
+                extensionNumber = 5
+            else:
+                extensionNumber = 0
             if not os.path.exists(gestures[currentGesture]):
                 os.mkdir(gestures[currentGesture])
         startPoint = line.get_xdata()[0]
         endPoint = startPoint + 250        
         print "split : ", startPoint, endPoint
 
-        vfilename = gestures[currentGesture] + str(currentIteration) + '.avi'
-        sfilename = gestures[currentGesture] + str(currentIteration) + '.txt'
+        vfilename = gestures[currentGesture] + str(extensionNumber) + '.avi'
+        sfilename = gestures[currentGesture] + str(extensionNumber) + '.txt'
 
         voutfile = os.path.join(gestures[currentGesture], vfilename)
         soutfile = os.path.join(gestures[currentGesture], sfilename)
@@ -102,12 +107,13 @@ def splitvideos():
         print 'output: ', voutfile
 
         currentIteration += 1
+        extensionNumber += 1
         subprocess.call([programPath, videoFile, str(int(startPoint)), str(int(endPoint)), voutfile])
 
-        #sensorStart = startPoint - sensorPos
-        #sensorEnd = sensorStart + 250
+        sensorStart = startPoint - sensorPos
+        sensorEnd = sensorStart + 250
 
-        #splitSensor(soutfile, int(sensorStart), int(sensorEnd))
+        splitSensor(soutfile, int(sensorStart), int(sensorEnd))
         
         #subprocess.call([programPath, videoFile, str(splitPoints[i]), str(splitPoints[i+1]), outfile])
 
