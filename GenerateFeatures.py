@@ -1,3 +1,4 @@
+import glob
 import serial
 import math
 import time
@@ -32,27 +33,29 @@ gestures = [gesturesAll]
 #trainingDirs = [trainingDirAll, trainingDirEMG, trainingDirFSR]
 
 def generate_features(directory):
-    originalPath = os.getcwd()
-    clipsDir = os.path.join(directory, 'clips/')
-    os.chdir(clipsDir)
-    print 'generating features for dir:', clipsDir
+    originalPath = os.path.dirname(sys.argv[0])
+    os.getcwd()
+    os.chdir(directory)
+    print 'generating features for dir:', directory
 
-    programPath = os.path.join(originalPath, "OpenSonoGestures")
-    featuresDir = os.path.join(directory, "features/");
+    programPath = os.path.join(originalPath,"build", "OpenSonoGestures")
+    featuresDir = os.path.join(directory, "features/")
 
     if not os.path.exists(featuresDir):
         os.mkdir(featuresDir)
     for i in os.listdir(os.getcwd()):
         if i in gesturesAll:
-            if not os.path.exists(os.path.join(featuresDir, i)):
-                os.mkdir(os.path.join(featuresDir, i))
+            gestureDir = os.path.join(featuresDir, i)
+            if not os.path.exists(gestureDir):
+                os.mkdir(gestureDir)
             print i
-            os.chdir(clipsDir + "/" + i)
-            for dataFile in os.listdir(os.getcwd()):
+            os.chdir(directory + "/" + i)
+            #for dataFile in os.listdir(os.getcwd()):
+            for dataFile in glob.glob(os.path.join(os.getcwd(),'*.avi')):
                 realpath = os.path.realpath(dataFile)
                 result = extract.extract(realpath, programPath)
-                basename = os.path.splitext(dataFile)[0]
-                outfile = os.path.join(featuresDir, i, basename+".txt")
+                basename =os.path.splitext((os.path.basename(dataFile)))[0] + ".txt"
+                outfile = os.path.join(gestureDir, basename)
                 print outfile
                 try:
                     os.remove(outfile)
@@ -62,9 +65,6 @@ def generate_features(directory):
                 f.write(result)
                 f.close()
                 
-                #features.append(result)
-
-    #features_scaled = (preprocessing.scale(features)).tolist()
     os.chdir(originalPath)
 
 if __name__ == '__main__':
@@ -78,16 +78,17 @@ if __name__ == '__main__':
     #	 cv_rate, c_matrix = cross_validate(r[0], r[1])
     #	 print np.round(cv_rate,2), '%' 
     #	 #print c_matrix
-    
-    all_c_matrices = []
-    sum_c_matrices = []
 
     #for i in range (2,4):
-    dirs = []
-    dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/dpa/")
-    dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/lpa/")
-    dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/tda/")
-    dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/tpa/")
-    dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/tpp/")
+    #dirs = []
+    #dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/dpa/")
+    #dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/lpa/")
+    #dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/tda/")
+    #dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/tpa/")
+    #dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/tpp/")
+    dir = sys.argv[1]
 
-    generate_features(dirs[0])
+    generate_features(os.path.abspath(dir))
+
+
+
