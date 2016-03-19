@@ -7,7 +7,7 @@ import csv
 import subprocess
 import scipy.signal
 
-SAMPLING_FR = 1000 / 50 #50 FPS
+SAMPLING_FR = 1000.0 / 50.0 #50 FPS
 
 
 #uniformly resamples the matrix data using data[][0] as the timestamps
@@ -20,8 +20,10 @@ def resampleUniform(data, samplingPeriod):
     r = [] 
         
     currentTime = data[0][0]
+    startTime = currentTime 
     currentIndex = 0
-       
+    iters = 0
+
     while currentIndex < columns:
         while currentIndex < columns and (currentTime > data[currentIndex][0]):
             currentIndex += 1
@@ -37,8 +39,8 @@ def resampleUniform(data, samplingPeriod):
                 interp = currentValue + (nextValue-currentValue)*pTime
                 row.append( interp )
             r.append( row )
-        currentTime += samplingPeriod
-        
+        currentTime = startTime + iters*samplingPeriod
+        iters += 1
     return r
 
 
@@ -63,8 +65,9 @@ def splitSensor(filename, sensorStart, sensorEnd):
 
 
 def splitvideos():
-    parentPath = os.getcwd()
-    programPath = os.path.join(parentPath, 'SplitClips')
+    parentPath = os.path.dirname(sys.argv[0])
+    #parentPath = os.getcwd()
+    programPath = os.path.join(parentPath, 'build', 'SplitClips')
     videoDir = os.path.dirname(videoFile)
 
     if videoDir != '':
@@ -199,7 +202,7 @@ sensorFile = sys.argv[2]
 videoFile = sys.argv[3] 
 videoFile = os.path.realpath(videoFile)
 
-gestures = ('thumb','index','middle','ring','fist','point','call','gun','flex','adduct')
+gestures = ('thumb','index','middle','ring','fist','point','call','gun','flex','adduct','thumb','index','middle','ring','fist','point','call','gun','flex','adduct')
 numGestPerformed = 5
 
 toggleClick = True
@@ -211,7 +214,7 @@ splitLines = []
 
 data = pylab.loadtxt(graphFile)
 sensorData = pylab.loadtxt(sensorFile)
-print sensorData
+#print sensorData
 
 fig = plt.figure()
 cid = fig.canvas.mpl_connect('button_press_event', onclick)
@@ -223,9 +226,11 @@ ax1 = fig.add_subplot(111)
 
 ax1.plot(data)
 
-sensorData = resampleUniform(sensorData, SAMPLING_FR)
+offsetFrames = 24.0
+sensorData = resampleUniform(sensorData, SAMPLING_FR+(20*(offsetFrames/21350.0)))
 #sensorData = scipy.signal.resample(sensorData, len(sensorData)*1.097)
 
+#print sensorData
 sensorData = np.array(sensorData)
 
 
