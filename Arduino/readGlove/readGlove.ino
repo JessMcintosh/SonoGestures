@@ -56,7 +56,7 @@ void loop() {
 
       sensorValues[i] = analogRead(sensorPin[i]);
       int v = map(sensorValues[i], minVals[i], maxVals[i], 0, 100);
-      v = constrain(v, 0, 100);
+      //v = constrain(v, 0, 100);
       Serial.print(v);
       Serial.print(" ");
     }
