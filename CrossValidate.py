@@ -63,7 +63,7 @@ def cross_validate(gestures, originalPath):
 	cum_rate = 0.0
 
 # loop through 10 times
-	for i in range(5):
+	for i in range(10):
 		print 'fold' , i 
 # select subset of features for the fold
 		count = 0
@@ -80,9 +80,9 @@ def cross_validate(gestures, originalPath):
 		#	 print feature_vector 
 
 		for feature_vector in features_scaled:
-			if count%5 == 0:
+			if count%10 == 0:
 				currentGesture += 1
-			if count%5 == i:
+			if count%10 == i:
 				testingSet.append(feature_vector)
 				testingLabels.append(currentGesture)
 			else:
@@ -188,7 +188,7 @@ def cross_validate(gestures, originalPath):
 		#print p_val
 	#print predictions
 
-	rate = cum_rate / 5.0
+	rate = cum_rate / 10.0
 
 	print np.round(rate,2), '%'
 	linear_pred = []
@@ -238,23 +238,27 @@ if __name__ == '__main__':
 	#	 print np.round(cv_rate,2), '%' 
 	#	 #print c_matrix
 	
-	all_c_matrices = []
-	sum_c_matrices = []
+	#all_c_matrices = []
+	#sum_c_matrices = []
 
 	#for i in range (2,4):
-	dirs = []
-	dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/dpa/")
-	dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/lpa/")
-	dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/tda/")
-	dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/tpa/")
-	dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/tpp/")
+	#dirs = []
+	#dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/dpa/")
+	#dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/lpa/")
+	#dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/tda/")
+	#dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/tpa/")
+	#dirs.append("/home/nappy/Drive/SonicGesturesData/08-03-2016/tpp/")
 
-	cv_rates, c_matrices = validate_participant(dirs[0])
-	cv_rates, c_matrices = validate_participant(dirs[1])
-	cv_rates, c_matrices = validate_participant(dirs[2])
-	cv_rates, c_matrices = validate_participant(dirs[3])
-	cv_rates, c_matrices = validate_participant(dirs[4])
-	all_c_matrices.append(c_matrices)
+	#cv_rates, c_matrices = validate_participant(dirs[0])
+	#cv_rates, c_matrices = validate_participant(dirs[1])
+	#cv_rates, c_matrices = validate_participant(dirs[2])
+	#cv_rates, c_matrices = validate_participant(dirs[3])
+	#cv_rates, c_matrices = validate_participant(dirs[4])
+
+	cv_rates, c_matrices = validate_participant(os.path.abspath(sys.argv[1]))
+	#all_c_matrices.append(c_matrices)
+
+    
 
 
 	# FOR CONFUSION MATRICES
