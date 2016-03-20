@@ -5,244 +5,126 @@
 #include <opencv2/video/tracking.hpp>
 
 #include <iostream>
+#include <vector>
 
 using namespace cv;
 using namespace std;
 
-static void drawOptFlowMap(const Mat& flow, Mat& cflowmap, int step,
-                    double, const Scalar& color)
-{
-	float scale = 10.0;
-    for(int y = 0; y < cflowmap.rows; y += step)
-        for(int x = 0; x < cflowmap.cols; x += step)
-        {
-            const Point2f& fxy = flow.at<Point2f>(y, x);
-			int fx, fy;
-			fx = cvRound(fxy.x*scale);
-			fy = cvRound(fxy.y*scale);
-			
-			// red represents horizontal movement left
-			// blue represents horizontal movement right
+#define FEATURES_SPACE 32
 
-			int b = 0;
-			int r = 0;
-			if(fx < 0) r = fx*-1;
-			else b = fx;
+#define INDEX(a,b,c, sizeY) ((sizeY*3* a) + 3*b + c)
 
-			Scalar col( b*20, 0, r*20);
-            line(cflowmap, Point(x,y), Point(x+fx, y+fy), col, 2);
-            //arrowedLine(cflowmap, Point(x,y), Point(cvRound(x+(fx*scale)), cvRound(y+(fy*scale))), col, 2);
-            circle(cflowmap, Point(x,y), 1, color, 1);
-        }
-}
+static void calcFeatures(const Mat& image, const int separation, vector<double>& features){
+	const cv::Size size = image.size();
+	const int x_res = size.width;
+	const int y_res = size.height;
+	const int nx_features = x_res / FEATURES_SPACE;
+	const int ny_features = y_res / FEATURES_SPACE;
 
-void thresholdFlowMatrix(Mat& flow, float threshold){
-    for(int y = 0; y < flow.rows; y ++)
-        for(int x = 0; x < flow.cols; x ++){
-            Point2f& f = flow.at<Point2f>(y, x);
-			if(sqrt(f.x*f.x + f.y*f.y) < threshold){
-				f.x = 0.0;
-				f.y = 0.0;
-			}
-		}
-}
 
-void absdiffRegions(const UMat& prev, const UMat& curr, UMat& dst){
-	
-}
+	Mat roi = image(cv::Rect(0, 0, separation, separation));
+	CvMoments moments;
+	for (int ix = 0; ix < nx_features; ++ix){
+		for (int iy = 0; iy < ny_features; ++iy){
+			const cv::Rect roiBounds(ix * separation, iy * separation, separation, separation);
+			roi = image(roiBounds);
 
-double sumSqMag(Mat& flow){
-	double mag = 0.0;
-    for(int y = 0; y < flow.rows; y ++)
-        for(int x = 0; x < flow.cols; x ++){
-            Point2f& f = flow.at<Point2f>(y, x);
-			//mag += sqrt(f.x*f.x + f.y*f.y);
-			mag += (f.x*f.x + f.y*f.y);
-		}
-	return mag/1000.0;
-}
+			double F0, F1, F2;
+			IplImage iRoi = roi;
+			cvMoments(&iRoi, &moments);
 
-double sumMagHorizontal(Mat& flow){
-	double mag = 0.0;
-    for(int y = 0; y < flow.rows; y ++)
-        for(int x = 0; x < flow.cols; x ++){
-            Point2f& f = flow.at<Point2f>(y, x);
-			mag += sqrt(f.x*f.x + f.y*f.y);
-		}
-	return mag;
-}
-
-void calcFlowMag(Mat& flow, Mat& result){
-    for(int y = 0; y < flow.rows; y ++)
-        for(int x = 0; x < flow.cols; x ++){
-            Point2f& f = flow.at<Point2f>(y, x);
-			result.at<float>(y,x) = sqrt(f.x*f.x + f.y*f.y);
-		}
-}
-
-void sampleMatrix(Mat& magnitudes, Mat& result, int step){
-	// Loop through sampled points
-	int count = 0;
-    for(int y = step/2; y < magnitudes.rows-step; y += step){
-        for(int x = step/2; x < magnitudes.cols-step; x += step){
-
-			// Loop through neighbouring pixels
-
-			float avg = 0;
-			
-			for (int i = 0; i < step; i++) 
-				for (int j = 0; j < step; j++) 
-					avg += magnitudes.at<float>(y+i, x+j);
-
-			avg /= step*step;
-			for (int i = 0; i < step; i++) 
-				for (int j = 0; j < step; j++)
-					result.at<float>(y+i,x+j) = avg;
-
-			cout << avg << " ";
-			//cout << count << ":" << avg << " ";
-			count ++;
+			const int findex = INDEX(ix, iy, 0, ny_features);
+			features[findex + 0] = cvGetSpatialMoment(&moments, 0, 0);
+			features[findex + 1] = 2 * cvGetCentralMoment(&moments, 1, 1);
+			features[findex + 2] = cvGetCentralMoment(&moments, 2, 0) - cvGetCentralMoment(&moments, 0, 2);
 		}
 	}
-	cout << endl;
 }
 
-int main(int argc, char** argv)
-{
-    VideoCapture cap(argv[1]);
+static void drawFeatures(Mat& image, const vector<double>& features){
+	const cv::Size size = image.size();
+	const int x_res = size.width;
+	const int y_res = size.height;
+	const int nx_features = x_res / FEATURES_SPACE;
+	const int ny_features = y_res / FEATURES_SPACE;
+
+	const Scalar color(128, 128, 128);
+	for (int ix = 0; ix < nx_features; ++ix){
+		for (int iy = 0; iy < ny_features; ++iy){
+			const Point p(ix * FEATURES_SPACE + (FEATURES_SPACE / 2), iy * FEATURES_SPACE + (FEATURES_SPACE / 2));
+
+			const int findex = INDEX(ix, iy, 0, ny_features);
+			const double N = FEATURES_SPACE * FEATURES_SPACE * 256;
+			const double f0 = features[findex + 0] / N * 10;
+			const double f1 = features[findex + 1] / N * 2;
+			const double f2 = features[findex + 2] / N * 2;
+
+			line(image, p, Point(p.x + f1, p.y - f2), color, 2);
+			circle(image, p, f0, color, 3);
+		}
+	}
+}
+
+int main(int argc, char** argv){
+	std::string fileName = "";
+	bool showImage = true;
+
+	if (argc == 1){ //no arguments 
+		fileName = "C:/Users/am14010/Google Drive/SonicGesturesData/18-03-2016/Asier/lpa/index/index0.avi";
+		//fileName = "C:/Users/am14010/Google Drive/SonicGesturesData/tmp/testOrientation.mp4";
+		showImage = true;
+	}else if (argc == 2){
+		fileName = argv[1];
+		showImage = false;
+	}
+	else if (argc == 3){
+		fileName = argv[1];
+		showImage = true;
+	}
+
+	VideoCapture cap( fileName.c_str() );
     if( !cap.isOpened() )
         return -1;
 
-	double fps = cap.get(CV_CAP_PROP_FPS);
-	double x_res = cap.get(CV_CAP_PROP_FRAME_WIDTH);
-	double y_res = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+	const int fps = cap.get(CV_CAP_PROP_FPS);
+	const int x_res = cap.get(CV_CAP_PROP_FRAME_WIDTH);
+	const int y_res = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
 
-	//cout << "fps : " << fps << endl;
-	//cout << "res : " << x_res << "," << y_res << endl;
+	const int nx_features = x_res / FEATURES_SPACE;
+	const int ny_features = y_res / FEATURES_SPACE;
 
+	std::vector<double> features(nx_features * ny_features * 3);
 
-	Mat acc_flow_magnitudes;
-	Mat curr_flow_magnitude;
-
-	UMat img;
-    Mat flow, cflow, frame, prevflow;
-    UMat gray, prevgray, uflow;
-	//UMat diffgray;
-	///UMat cum_diff;
-    //namedWindow("flow", 1);
-	//Rect cropRectangle(125,90,455,360);
-	//double alpha = 0.6;
-	double alpha = 0.8;
-	double beta = (1.0 - alpha);
-	bool first = 1;
-	int frameCount = 0;
-
-    for(;;frameCount++)
-    {
-		//if(frameCount > 4) break;
-
+	Mat frame, gray;
+  	
+	for (int frameCount = 0; ;frameCount++){
         cap >> frame;
 		if (frame.empty()) break;
-		//frame.copyTo(img);
-
-        //frame = frame(cropRectangle);
-		//extractChannel(frame, gray, 0);
-        cvtColor(frame, gray, COLOR_BGR2GRAY);
 		
-        GaussianBlur(gray, gray, Size( 5, 5), 0, 0);
+        cvtColor(frame, gray, COLOR_BGR2GRAY);
+        GaussianBlur(gray, gray, Size(5, 5), 0, 0);
 
-        if( !prevgray.empty() )
-        {
-			//calcOpticalFlowPyrLK();
-			//createOptFlow_DualTVL1();
-			if(first)
-				calcOpticalFlowFarneback(prevgray, gray, uflow, 0.5, 3, 15, 4, 5, 1.2, 0);
-			else
-				calcOpticalFlowFarneback(prevgray, gray, uflow, 0.5, 2, 15, 3, 5, 1.2, OPTFLOW_USE_INITIAL_FLOW );
+		//calc the features
+		calcFeatures(gray, FEATURES_SPACE, features);
 
-
-			//calcOpticalFlowFarneback(prevgray, gray, uflow, 0.5, 3, 15, 3, 5, 1.2, 0);
-            cvtColor(prevgray, cflow, COLOR_GRAY2BGR);
-            uflow.copyTo(flow);
-			//thresholdFlowMatrix(flow, 1.5);
-			GaussianBlur(flow, flow, Size( 15, 15), 0, 0);
-
-            //drawOptFlowMap(flow, cflow, 16, 1.5, Scalar(0, 255, 0));
-			//imshow("flow", cflow);
-
-			calcFlowMag(flow, curr_flow_magnitude);
-			acc_flow_magnitudes += curr_flow_magnitude;
-
-			
-			if(!first){
-				// In order to average the frames
-				//addWeighted(prevflow, alpha, flow, beta, 0.0, flow);
-				addWeighted(prevflow, alpha, flow, beta, 0.0, flow);
-				//absdiff(prevgray, gray, diffgray);
-				//addWeighted(cum_diff, 0.7, diffgray, 0.3, 0.0, cum_diff);
-				//addWeighted(cum_diff, 0.1, diffgray, 0.9, 0.0, cum_diff);
-
-				//double sum = pow((cv::sum(diffgray)[0]/10000.0),2);
-				//cout << sum << endl;
-				//add_flow_magnitudes(acc_flow_magnitudes
-				//acc_flow_magnitudes += flow;
-				//calcFlowMag(flow, curr_flow_magnitude);
-				//imshow("flow mag", curr_flow_magnitude);
-				//magnitude(flow[0], flow[1], mag);
-				//acc_flow_magnitudes += curr_flow_magnitude;
-					
+		if (!showImage){
+			//output into the standard input
+			const int l = features.size();
+			for (int i = 0; i < l; ++i){
+				cout << features[i] << " ";
 			}
-			//else{
-			//	//cum_diff = UMat::zeros(gray.rows, gray.cols, CV_8UC1);
-			//	acc_flow_magnitudes = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
-			//	curr_flow_magnitude = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
-			//}
-			prevflow = flow.clone();
-			first = 0;
-			
-
-			//cout << flow;
-
-            //drawOptFlowMap(flow, cflow, 8, 1.5, Scalar(0, 255, 0));
-            //drawOptFlowMap(flow, cflow, 16, 1.5, Scalar(0, 255, 0));
-			
-            //imshow("flow", cflow);
-
-			//double sum = sumSqMag(flow);
-			//double sum = sumMagHorizontal(flow);
-			//double sum = cv::sum(gray)[0]/(gray.rows *gray.cols);
-			//cout << sum << endl;
-
-			//absdiff(prevgray, gray, diffgray);
-			
-			//imshow("diff", cum_diff);
-			
-
-        }
-		else{
-			acc_flow_magnitudes = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
-			curr_flow_magnitude = Mat::zeros(gray.rows, gray.cols, CV_32FC1);
+			cout << endl;
 		}
-        //if(waitKey(30) == 'q')
-        //if(waitKey(1) == 'q') break;
-        std::swap(prevgray, gray);
-    }
-	//imshow("acc flow", acc_flow_magnitudes);
-	//drawAccFlowMap(acc_flow_magnitudes, cflow, 16, 1.5, Scalar(0, 255, 0));
-	Mat norm_magnitudes;
-    acc_flow_magnitudes.convertTo(norm_magnitudes, CV_32FC1, 1.0/(frameCount));	
-	Mat magnitudes_sampled;
-	magnitudes_sampled = norm_magnitudes.clone();
-	//sampleMatrix(magnitudes_sampled, magnitudes_sampled, 16);
-	sampleMatrix(magnitudes_sampled, magnitudes_sampled, 32);
+		else{
+			//draw them
+			drawFeatures(gray, features);
+			imshow("raw image with blur", gray);
+		}
+		
+		if (showImage && waitKey(50) == 'q') break;
+    
+	}
 
-	//imshow("flow acc", norm_magnitudes);
-	//imshow("flow sampled", magnitudes_sampled);
-	//imshow("flow", cflow);
-	//while(waitKey() != 'q'){}
-	//char c = waitKey();
-	//cout << c;
-			
     return 0;
 }
 

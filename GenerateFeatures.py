@@ -15,7 +15,7 @@ def generate_features(featureGenerator, directory):
     print 'generating features for dir:', directory
 
     programPath = os.path.join(originalPath,"build", featureGenerator)
-    featuresDir = os.path.join(directory, featureGenerator + "/")
+    featuresDir = os.path.join(directory, featureGenerator.replace(".exe","") + "/")
 
     if not os.path.exists(featuresDir):
         os.mkdir(featuresDir)
