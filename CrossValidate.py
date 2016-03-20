@@ -214,7 +214,8 @@ def validate_participant(directory):
 	c_matrices = []
 
 	originalWorkingPath = os.getcwd()
-	os.chdir(os.path.join(directory, "features/"))
+	#os.chdir(os.path.join(directory, "features/"))
+	os.chdir(directory)
 	print 'validating:', directory
 	for r in gestures:
 		#print r[1]
