@@ -48,7 +48,7 @@ static void drawFeatures(Mat& image, const vector<double>& features){
 	const int nx_features = x_res / FEATURES_SPACE;
 	const int ny_features = y_res / FEATURES_SPACE;
 
-	const Scalar blue(128, 128, 128);
+	const Scalar color(128, 128, 128);
 	for (int ix = 0; ix < nx_features; ++ix){
 		for (int iy = 0; iy < ny_features; ++iy){
 			const Point p(ix * FEATURES_SPACE + (FEATURES_SPACE / 2), iy * FEATURES_SPACE + (FEATURES_SPACE / 2));
@@ -59,8 +59,8 @@ static void drawFeatures(Mat& image, const vector<double>& features){
 			const double f1 = features[findex + 1] / N * 2;
 			const double f2 = features[findex + 2] / N * 2;
 
-			line(image, p, Point(p.x + f1, p.y - f2), blue, 2);
-			circle(image, p, f0, blue, 3);
+			line(image, p, Point(p.x + f1, p.y - f2), color, 2);
+			circle(image, p, f0, color, 3);
 		}
 	}
 }
