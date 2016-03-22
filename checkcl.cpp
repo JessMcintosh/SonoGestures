@@ -9,6 +9,7 @@ using namespace std;
 
 int  main ()
 {
+	/*
         cv::ocl::setUseOpenCL(true);
         if  (!cv::ocl::haveOpenCL()){
         	cout  <<  "OpenCL is not available" <<  endl ;
@@ -43,5 +44,5 @@ int  main ()
 			cout << "OpenCL_C_Version:  " << device.OpenCL_C_Version() << endl;
 			cout << endl;
 		}
-
+*/
 }
