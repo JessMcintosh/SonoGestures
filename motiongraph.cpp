@@ -118,8 +118,8 @@ int main(int argc, char** argv)
 		//cout  <<  "OpenCL is not available" <<  endl ;
 		//exit(0);	
 	}
-	else 
-		cout << "OpenCL available" << endl;
+	//else 
+		//cout << "OpenCL available" << endl;
 
 
 	double fps = cap.get(CV_CAP_PROP_FPS);

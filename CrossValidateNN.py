@@ -16,6 +16,8 @@ from sklearn import svm
 from sklearn.neural_network import MLPClassifier
 from sklearn.cross_validation import StratifiedShuffleSplit
 from sklearn.grid_search import GridSearchCV
+from sklearn.multiclass import OneVsOneClassifier
+from sklearn.multiclass import OneVsRestClassifier
 #from svmutil import *
 from time import sleep
 
@@ -65,7 +67,7 @@ def cross_validate(gestures, originalPath):
 
 # loop through 10 times
 	for i in range(10):
-		print 'fold' , i 
+		#print 'fold' , i 
 # select subset of features for the fold
 		count = 0
 		trainingSet		= []
@@ -93,43 +95,29 @@ def cross_validate(gestures, originalPath):
 
 # train the data on the new subset
 
-		# iterate through parameters
-
-		C_values = [1, 2, 8, 32, 128, 512, 2048, 8192]
-		gamma_values = [0.001,0.01,0.05,0.1,0.3,0.5,0.7]
-
-		#C_values = [2]
-		#gamma_values = [0.5]
-
-		best_C = 0
-		best_G = 0
-		best_percentage = 0
-
-		#clf = svm.SVC(C=2.0,gamma=0.5)
-
-		C_range = np.logspace(-2, 10, num=13, base=2)
-		gamma_range = np.logspace(-5, 1, num=7, base=10)
-		param_grid = dict(gamma=gamma_range, C=C_range)
-		cv = StratifiedShuffleSplit(trainingLabels, n_iter=3, test_size=0.31, random_state=42)
-		grid = GridSearchCV(svm.SVC(), param_grid=param_grid, cv=cv)
-		grid.fit(trainingSet, trainingLabels)
-		#C_range = np.logspace(-1, 1, num=2, base=2)
-		#gamma_range = np.logspace(-1, 1, num=2, base=10)
-		#param_grid = dict(gamma=gamma_range, C=C_range)
-		#cv = StratifiedShuffleSplit(trainingLabels, n_iter=1, test_size=0.11, random_state=42)
-		#grid = GridSearchCV(svm.SVC(), param_grid=param_grid, cv=cv)
-		#grid.fit(trainingSet, trainingLabels)
-
-		best_C = grid.best_params_['C']
-		best_G = grid.best_params_['gamma']
-		#print("The best parameters are %s with a score of %0.2f"
-		#			   % (grid.best_params_, grid.best_score_))
-
-
 		#start = time.time()
-		clf = svm.SVC(C=best_C,gamma=best_G)
-		clfoutput = clf.fit(trainingSet, trainingLabels)
-		result = clf.predict(testingSet)
+                #clf = MLPClassifier(algorithm='l-bfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
+                #clf.fit(trainingSet, trainingLabels)
+                #clf.predict(testingSet)
+
+                #clf = OneVsOneClassifier(MLPClassifier(algorithm='l-bfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1))                
+                #clf = OneVsRestClassifier(MLPClassifier(algorithm='l-bfgs', alpha=1e-1, hidden_layer_sizes=(15, ), random_state=1))                
+                clf = OneVsRestClassifier(MLPClassifier(algorithm='l-bfgs', alpha=1e-4, hidden_layer_sizes=(3, ), random_state=1))                
+
+                trainingSet = np.array(trainingSet)
+                trainingLabels = np.array(trainingLabels)
+                testingSet = np.array(testingSet)
+                
+                clf.fit(trainingSet, trainingLabels)
+                result = clf.predict(testingSet)
+                #print result
+
+                #result = OneVsOneClassifier(MLPClassifier(algorithm='l-bfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)).fit(trainingSet, trainingLabels).predict(testingSet)
+
+                #print result
+
+		#clfoutput = clf.fit(trainingSet, trainingLabels)
+		#result = clf.predict(testingSet)
 		#end = time.time()
 		#print end-start + featuretime
 		predictions.append(result.tolist())
@@ -141,31 +129,9 @@ def cross_validate(gestures, originalPath):
 
 
 		percentage = (float(num_correct) * 100.0) / float(len(gestures))
-		print 'percentage: ' , percentage
+		#print 'percentage: ' , percentage
 		best_percentage = percentage
 
-#		 for params in itertools.product(C_values, gamma_values):
-#
-#			 clf = svm.SVC(C=params[0],gamma=params[1])
-#			 clfoutput = clf.fit(trainingSet, trainingLabels)
-## classify
-#			 result = clf.predict(testingSet)
-#			 predictions.append(result.tolist())
-#			 
-#			 num_correct = 0
-#			 for j,k in zip(result,testingLabels):
-#				 if j == k:
-#					 num_correct += 1
-#
-#
-#			 percentage = (float(num_correct) * 100.0) / float(len(gestures))
-#			 if percentage >= best_percentage:
-#				 best_percentage = percentage
-#				 best_C = params[0]
-#				 best_G = params[1]
-#
-			#print params
-			#print percentage
 
 		cum_rate += best_percentage
 		#print np.round(percentage,2), '%'
@@ -191,7 +157,7 @@ def cross_validate(gestures, originalPath):
 
 	rate = cum_rate / 10.0
 
-	print np.round(rate,2), '%'
+	print np.round(rate,3), '%'
 	linear_pred = []
 	linear_true = []
 	for i in predictions:
@@ -205,8 +171,8 @@ def cross_validate(gestures, originalPath):
 	#print linear_true
 
 	c_matrix = confusion_matrix(linear_true, linear_pred) 
-	print c_matrix
-        plot_confusion_matrix(c_matrix,"confusionmatrix")
+	#print c_matrix
+        #plot_confusion_matrix(c_matrix,"confusionmatrix")
 
 	return rate, c_matrix
 
@@ -216,17 +182,16 @@ def validate_participant(directory):
 
 	originalWorkingPath = os.getcwd()
 	#os.chdir(os.path.join(directory, "features/"))
-	os.chdir(directory)
-	print 'validating:', directory
+	os.chdir(os.path.abspath(directory))
+	#print 'validating:', directory
 	for r in gestures:
 		#print r[1]
 		cv_rate, c_matrix = cross_validate(r, originalWorkingPath)
 		cv_rates.append(cv_rate)
 		c_matrices.append(c_matrix)
-		print(np.round(cv_rate,2))
 	os.chdir(originalWorkingPath)
 
-	return cv_rates, c_matrices
+	return cv_rate, c_matrix
 
 if __name__ == '__main__':
 
@@ -257,7 +222,7 @@ if __name__ == '__main__':
 	#cv_rates, c_matrices = validate_participant(dirs[3])
 	#cv_rates, c_matrices = validate_participant(dirs[4])
 
-	cv_rates, c_matrices = validate_participant(os.path.abspath(sys.argv[1]))
+	cv_rates, c_matrices = validate_participant(sys.argv[1])
 	#all_c_matrices.append(c_matrices)
 
     

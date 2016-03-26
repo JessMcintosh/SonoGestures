@@ -19,7 +19,7 @@ def walktree(top, callback):
 def visitfile(fname):
     if fname.count('_') > 3 and fname.count('.') == 0:
         newFilename = os.path.join(os.path.dirname( os.path.realpath(fname)), 'glove.txt')
-        #print 'rename ' + file + ' to ' +  newFilename
+        #print 'rename ' + fname + ' to ' +  newFilename
         os.rename(fname, newFilename)
 
 if len(sys.argv) != 2:

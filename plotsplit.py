@@ -84,7 +84,7 @@ def splitvideos():
     #print 'sensor start position', sensorPos
 
     for line in splitLines[:-1]:
-        if currentIteration == numGestPerformed:
+        if currentIteration == (numGestPerformed+1):
             currentGesture += 1
             currentIteration = 0
             if currentGesture > 9:
@@ -93,6 +93,9 @@ def splitvideos():
                 extensionNumber = 0
             if not os.path.exists(gestures[currentGesture]):
                 os.mkdir(gestures[currentGesture])
+        if currentIteration == 0:
+            currentIteration += 1
+            continue
         startPoint = line.get_xdata()[0]
         endPoint = startPoint + 250        
         print "split : ", startPoint, endPoint
@@ -253,7 +256,7 @@ sensorLines.append(sl2)
 sensorLines.append(sl3) 
 sensorLines.append(sl4) 
 
-numLines = len(gestures)*numGestPerformed*250+250
+numLines = len(gestures)*(1+numGestPerformed)*250+250
 for i in range(0,numLines,250):
     ln, = plt.plot([i, i], [300, -50], color='k', linestyle='-', linewidth=1)
     splitLines.append(ln)

@@ -64,7 +64,7 @@ def cross_validate(gestures, originalPath):
 
 # loop through 10 times
 	for i in range(10):
-		print 'fold' , i 
+		#print 'fold' , i 
 # select subset of features for the fold
 		count = 0
 		trainingSet		= []
@@ -140,7 +140,7 @@ def cross_validate(gestures, originalPath):
 
 
 		percentage = (float(num_correct) * 100.0) / float(len(gestures))
-		print 'percentage: ' , percentage
+		#print 'percentage: ' , percentage
 		best_percentage = percentage
 
 #		 for params in itertools.product(C_values, gamma_values):
@@ -191,6 +191,7 @@ def cross_validate(gestures, originalPath):
 	rate = cum_rate / 10.0
 
 	print np.round(rate,2), '%'
+	#print np.round(rate,3)
 	linear_pred = []
 	linear_true = []
 	for i in predictions:
@@ -204,8 +205,8 @@ def cross_validate(gestures, originalPath):
 	#print linear_true
 
 	c_matrix = confusion_matrix(linear_true, linear_pred) 
-	print c_matrix
-        plot_confusion_matrix(c_matrix,"confusionmatrix")
+	#print c_matrix
+        #plot_confusion_matrix(c_matrix,"confusionmatrix")
 
 	return rate, c_matrix
 
@@ -215,17 +216,18 @@ def validate_participant(directory):
 
 	originalWorkingPath = os.getcwd()
 	#os.chdir(os.path.join(directory, "features/"))
-	os.chdir(directory)
-	print 'validating:', directory
+	os.chdir(os.path.abspath(directory))
+	#print 'validating:', os.path.abspath(directory)
 	for r in gestures:
 		#print r[1]
 		cv_rate, c_matrix = cross_validate(r, originalWorkingPath)
 		cv_rates.append(cv_rate)
 		c_matrices.append(c_matrix)
-		print(np.round(cv_rate,2))
+		#print(np.round(cv_rate,2))
 	os.chdir(originalWorkingPath)
 
-	return cv_rates, c_matrices
+	#return cv_rates, c_matrices
+	return cv_rate, c_matrix
 
 if __name__ == '__main__':
 
@@ -256,7 +258,7 @@ if __name__ == '__main__':
 	#cv_rates, c_matrices = validate_participant(dirs[3])
 	#cv_rates, c_matrices = validate_participant(dirs[4])
 
-	cv_rates, c_matrices = validate_participant(os.path.abspath(sys.argv[1]))
+	cv_rates, c_matrices = validate_participant(sys.argv[1])
 	#all_c_matrices.append(c_matrices)
 
     

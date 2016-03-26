@@ -8,78 +8,73 @@ import sys
 import getopt
 import os
 import subprocess
+import json
+import pyexcel as pe
 from time import sleep
 from itertools import izip
+from pyexcel_ods import save_data
+#from CrossValidateSVM import validate_participant
+from CrossValidateNN import validate_participant
+from collections import OrderedDict
 
-features = ('FeaturesAll.dat', 'FeaturesAllEMG.dat', 'FeaturesAllFSR.dat',
-            'FeaturesFingers.dat', 'FeaturesFingersEMG.dat', 'FeaturesFingersFSR.dat',
-            'FeaturesWrist.dat', 'FeaturesWristEMG.dat', 'FeaturesWristFSR.dat')
-parentPath = os.getcwd()
+features = ['features', 'FeaturesFlowMag']
+locations = ['dpa', 'lpa', 'tda', 'tpa']
+#locations = ['dpa', 'lpa', 'tda', 'tpa', 'tpp']
+participants = ['Asier', 'Jess']
 
-for i in range (2,10):
-    #print 'Test_0' + str(i) + '/Features.dat'
-    dir = 'Test_0' + str(i)
-    os.chdir(dir)
-    print dir, 'generating feature vectors...'
-    subprocess.call(['./GenerateFeatureVectors.py'])
-    os.chdir(parentPath)
-    for n in features:
-        arg = dir + '/' + n
-        print arg
-        subprocess.call(['./easy.py', arg])
+cv_rates_all = []
+c_matrices_all = []
 
-dir = 'Test_10'
-os.chdir(dir)
-print dir, 'generating feature vectors...'
-subprocess.call(['./GenerateFeatureVectors.py'])
-os.chdir(parentPath)
-for n in features:
-    arg = 'Test_10' + '/' + n
-    subprocess.call(['./easy.py', arg])
+featureSet = sys.argv[2]
 
-dir = 'Test_11'
-os.chdir(dir)
-print dir, 'generating feature vectors...'
-subprocess.call(['./GenerateFeatureVectors.py'])
-os.chdir(parentPath)
-for n in features:
-    arg = 'Test_11' + '/' + n
-    subprocess.call(['./easy.py', arg])
+if len(sys.argv) > 3:
+    participants = [sys.argv[3]]
 
-dir = 'Test_12'
-os.chdir(dir)
-print dir, 'generating feature vectors...'
-subprocess.call(['./GenerateFeatureVectors.py'])
-os.chdir(parentPath)
-for n in features:
-    arg = 'Test_12' + '/' + n
-    subprocess.call(['./easy.py', arg])
+# set up spreadsheet
+data = OrderedDict() 
 
-dir = 'Test_13'
-os.chdir(dir)
-print dir, 'generating feature vectors...'
-subprocess.call(['./GenerateFeatureVectors.py'])
-os.chdir(parentPath)
-for n in features:
-    arg = 'Test_13' + '/' + n
-    subprocess.call(['./easy.py', arg])
-exit(0)
+data_path = os.path.abspath(sys.argv[1])
 
-for i in os.listdir(dir_pressure):
-	print i 
-	for n in os.listdir(os.path.join(dir_pressure, i)):
-		print n
-		#result = subprocess.check_output(["paste", "-d ", os.path.join(dir_pressure, i, m), os.path.join(dir_EMG, j, n)])
-		result = subprocess.check_output(["cut", "-d", " ", "-f5,6,7,8", os.path.join(dir_pressure, i, n)])
-        #ts = time.time()
-        #filename = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-		
-		r_path = os.path.join(dir_output, i)
-		if not os.path.exists(os.path.join(dir_output, i)):
-			os.makedirs(r_path)
+for p in participants:
+    cv_rates = []
+    c_matrices = []
+    cv_rates.append(p)
 
-		f = open(os.path.join(r_path, n), 'w')
-		f.write(result)
-		f.close()
+    for loc in locations:
+        print p, loc
+        path = os.path.join(data_path, p, loc, featureSet)
+        cv_rate, c_matrix = validate_participant(path)
+        cv_rates.append(cv_rate)
+        c_matrices.append(c_matrix)
 
-exit(0)
+    cv_rates_all.append(cv_rates)
+    c_matrices_all.append(c_matrices)
+
+cv_averages = []
+for i in range(len(locations)+1):
+    if i == 0:
+        continue
+    cv_averages.append(0.0)
+for rates in cv_rates_all:
+    for i in range(len(locations)+1):
+        if i == 0:
+            continue
+        cv_averages[i-1] += rates[i]
+for i in range(len(locations)+1):
+    if i == 0:
+        continue
+    cv_averages[i-1] = cv_averages[i-1] / len(c_matrices_all)
+
+cv_averages.insert(0, 'avg')
+locations.insert(0, 'participant')
+
+cv_rates_all.insert(0, locations)
+cv_rates_all.append(cv_averages)
+
+data.update({featureSet: cv_rates_all})
+#data.update({"Sheet 1": [cv_rates]})
+save_data("results.ods", data)
+sheet = pe.get_book(file_name="results.ods")
+print sheet
+
+exit(0);
