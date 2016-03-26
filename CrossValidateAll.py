@@ -13,8 +13,8 @@ import pyexcel as pe
 from time import sleep
 from itertools import izip
 from pyexcel_ods import save_data
-#from CrossValidateSVM import validate_participant
-from CrossValidateNN import validate_participant
+from CrossValidateSVM import validate_participant as CV_SVM
+from CrossValidateNN import validate_participant as CV_NN
 from collections import OrderedDict
 
 features = ['features', 'FeaturesFlowMag']
@@ -43,7 +43,7 @@ for p in participants:
     for loc in locations:
         print p, loc
         path = os.path.join(data_path, p, loc, featureSet)
-        cv_rate, c_matrix = validate_participant(path)
+        cv_rate, c_matrix = CV_NN(path)
         cv_rates.append(cv_rate)
         c_matrices.append(c_matrix)
 

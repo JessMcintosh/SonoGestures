@@ -101,8 +101,8 @@ def cross_validate(gestures, originalPath):
                 #clf.predict(testingSet)
 
                 #clf = OneVsOneClassifier(MLPClassifier(algorithm='l-bfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1))                
-                #clf = OneVsRestClassifier(MLPClassifier(algorithm='l-bfgs', alpha=1e-1, hidden_layer_sizes=(15, ), random_state=1))                
-                clf = OneVsRestClassifier(MLPClassifier(algorithm='l-bfgs', alpha=1e-4, hidden_layer_sizes=(3, ), random_state=1))                
+                clf = OneVsRestClassifier(MLPClassifier(algorithm='l-bfgs', alpha=1e-1, hidden_layer_sizes=(15, ), random_state=1))                
+                #clf = OneVsRestClassifier(MLPClassifier(algorithm='l-bfgs', alpha=1e-4, hidden_layer_sizes=(3, ), random_state=1))                
 
                 trainingSet = np.array(trainingSet)
                 trainingLabels = np.array(trainingLabels)

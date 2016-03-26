@@ -1,3 +1,4 @@
+from struct import *
 import time
 import re
 import datetime
@@ -23,10 +24,16 @@ def readFeatures(file):
 
     return features
 
+def readBinaryFile(file):
+#for line in f
+    features = []
+    f = open(file)
+    result = f.read()
+    print result
+    return unpack('b', result)
+
 def extract(file, programPath):
-
     return subprocess.check_output([programPath, file])
-
 
 
 def extract_features(data):
@@ -47,4 +54,6 @@ def extract_features(data):
     return feature_vector
 
 if __name__ == '__main__':
-    extract(argv[1])
+    #extract(argv[1])
+    r = readBinaryFile(argv[1])
+    print r
