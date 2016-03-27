@@ -20,19 +20,6 @@
 #include <vector>
 #include <string>
 
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <unistd.h>
-#endif
-
-void mySleep(int sleepMs){
-#ifdef _WIN32
-	Sleep(sleepMs);
-#else
-	usleep(sleepMs * 1000);
-#endif
-}
 
 using namespace cv;
 using namespace std;
@@ -156,7 +143,6 @@ int main(int argc, char** argv){
 			markingPoints = true;
 			while (markingPoints){ //Sorry about this lame waiting
 				waitKey(5);
-				//mySleep(5);
 			}
 
 			if (buttonPressed == EVENT_LBUTTONDOWN){//normal button --> mark the point
