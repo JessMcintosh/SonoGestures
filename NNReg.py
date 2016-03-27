@@ -5,14 +5,10 @@ import os
 import pylab
 import numpy as np
 import math
-from sklearn import linear_model
-from sklearn.neural_network import MLPClassifier
-from sklearn.cross_validation import StratifiedShuffleSplit
-from sklearn.grid_search import GridSearchCV
-from sklearn.multiclass import OneVsOneClassifier
-from sklearn.multiclass import OneVsRestClassifier
 
-FEATURES_NAME = "FeatureFramesMoments"
+from sklearn.preprocessing import StandardScaler 
+from sklearn.neural_network import MLPRegressor
+
 
 #GESTURES = ["call","fist","gun","index","middle","point","ring","thumb","adduct","flex"]
 GESTURES = ["index","middle","ring","thumb","call","fist","gun"]
@@ -23,47 +19,70 @@ N_FINGERS = 5
 def regression(N, P):
     assert len(N) == len(P)
     
-    clf = linear_model.Ridge (alpha = .1)
-    clf.fit (N, P)
-    #r = {"A":clf.coef_, "b":clf.intercept_}
-    return clf.coef_, clf.intercept_
+	clf = MLPRegressor(hidden_layer_sizes=(64, ), activation='relu', algorithm='adam', alpha=0.0001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=200, shuffle=True, random_state=None, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
+	
+	clf.fit (N, P)
+    return clf
 
-def dotProduct(A,B):
-    r = 0
-    for i in range(0, len(A)):
-        r += A[i] * B[i]
-    return r
-    
-#in theory NA + b = P
-def calcNRMS(A,b, N,P):
+
+def calcNRMS(nn, N,P):
     rowsN = len(N);
-    rowsA = len(A);
     colsN = len(N[0]);
     sizeP = len(P);
     
-    assert sizeP == rowsN  and colsN == rowsA
+    assert sizeP == rowsN
     nrms = 0
     minV = sys.float_info.max
     maxV = -sys.float_info.max
-    for i in range(0, colsN):
+    predictedValues = nn.predict(N)
+	for i in range(0, sizeP):
         realValue = P[i]
-        predictedValue = dotProduct(N[i], A) + b
+        predictedValue = predictedValues[i]
         diff = realValue - predictedValue
         minV = min(minV, realValue)
         maxV = max(maxV, realValue)
         nrms += diff*diff
     
-    return math.sqrt(nrms/colsN) / (maxV - minV)
+    return math.sqrt(nrms/sizeP) / (maxV - minV)
 
 
 def loadFile(path):
     return pylab.loadtxt(path)
 
 
-if len(sys.argv) != 2:
-    print 'Usage: ' + sys.argv[0] + ' path'
-    exit()
+def median(data):
+    data = sorted(data)
+    n = len(data)
+    if n%2 == 1:
+        return data[n//2]
+    else:
+        i = n//2
+        return (data[i - 1] + data[i])/2
+    
+# applies a median filter on the vector with window size a
+def medianFilter(data, a):
+    n = len(data)
+    for i in range(0,n-a): #TODO sorry about the border and the not centered window
+        data[i] = median( data[i:i+a] );
+    return;
 
+# applies a low pass filter as v[t] = s*alpha + v[t-1]*(1-alpha)
+def lowPassFilter(data, alpha):   
+    beta = (1 - alpha)
+    n = len(data)
+    for i in range(1,n):
+        data[i] = data[i]*alpha + data[i-1]*beta
+    return;
+
+verbose = True
+if len(sys.argv) == 2:
+    verbose = False
+elif len(sys.argv) == 3:
+    verbose = True
+else:
+    print 'Usage: ' + sys.argv[0] + ' path [verbose]'
+    exit()
+    
 featuresPath =  os.path.realpath(sys.argv[1])
 fingersPath = os.path.dirname( os.path.realpath(featuresPath))
 
@@ -79,20 +98,29 @@ for ig in GESTURES:
         features[ig].append( loadFile(featurePath) )
         fingers[ig].append( loadFile(fingerPath).T )
         
-#generate the sampling, training
-errors = np.zeros( N_FINGERS );
-
+		
+#filter the glove data
+'''
+for ig in GESTURES:
+    for n in range(0,N_GESTURES):
+        for f in range(0,N_FINGERS):
+            #lowPassFilter(fingers[ig][n][f], 0.1)   
+            medianFilter(fingers[ig][n][f], 15)
+'''            
+     
+	 
 #cross validation
-for i in range(0, 1):
-#for i in range(0, N_GESTURES):
+errors = np.zeros( N_FINGERS );
+for i in range(0, N_GESTURES):
     #skip i
     training = range(0, N_GESTURES)
     training.remove( i )
     sample = [i]
     
-    #for n in range (0, N_FINGERS):
-    for n in range (0, 1):
-        print "Regression " + str(i) + "/" + str(N_GESTURES) + " for finger " + str(n)
+    for n in range (0, N_FINGERS):
+        if verbose:
+            print "Regression " + str(i) + "/" + str(N_GESTURES) + " for finger " + str(n)
+            
         #create N and P
         trainingN = []
         trainingP = []
@@ -107,9 +135,20 @@ for i in range(0, 1):
                 sampleN.extend( features[ig][inu] ) 
                 sampleP.extend( fingers[ig][inu][n] )
         
-        A, b = regression(trainingN, trainingP)
-        errors[n] += calcNRMS(A, b, sampleN, sampleP)
+		scaler = StandardScaler()  
+		scaler.fit(trainingN)  
+		trainingN = scaler.transform(trainingN)  
+		sampleN = scaler.transform(sampleN)  
+        result = regression(trainingN, trainingP)
+        errors[n] += calcNRMS(result, sampleN, sampleP)
 
-print "---------- " 
+if verbose:
+    print "---------- "
+average = 0
 for n in range (0, N_FINGERS):
-    print "NRMS for finger " + str(n) + " " + ("%.2f" % (errors[n]/N_GESTURES*100))
+    percentage = (errors[n]/N_GESTURES*100)
+    average += percentage
+    if verbose:
+        print "NRMS for finger " + str(n) + " " + ("%.2f" % percentage)
+average /= N_FINGERS
+print str(average)

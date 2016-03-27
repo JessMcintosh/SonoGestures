@@ -13,5 +13,5 @@ for participant in os.listdir(PATH):
         for location in os.listdir(pDir):
             lDir = os.path.join(pDir, location, "FeatureFramesMoments")
             if (os.path.isdir( lDir)):
-                #print participant, " ", location
-                call(["python", program, lDir])
+                print participant, " ", location
+                call(["python", program, lDir,"v"])

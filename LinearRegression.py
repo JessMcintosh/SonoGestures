@@ -6,6 +6,7 @@ import pylab
 import numpy as np
 import math
 from sklearn import linear_model
+import matplotlib.pyplot as plt
 
 #GESTURES = ["call","fist","gun","index","middle","point","ring","thumb","adduct","flex"]
 GESTURES = ["index","middle","ring","thumb","call","fist","gun"]
@@ -105,13 +106,17 @@ for ig in GESTURES:
 errors = np.zeros( N_FINGERS );
 
 #filter the glove data
-'''
+
 for ig in GESTURES:
     for n in range(0,N_GESTURES):
         for f in range(0,N_FINGERS):
-            #lowPassFilter(fingers[ig][n][f], 0.5)   
-            medianFilter(fingers[ig][n][f], 3)
-'''            
+            currentList = fingers[ig][n][f]
+            #copyList = list( currentList )
+            #listRange = range(0, len(currentList))
+            medianFilter(currentList, 15)
+            #lowPassFilter(fingers[ig][n][f], 0.1)
+            #plt.plot(listRange, copyList, 'r--', listRange, currentList, 'bs')
+            #plt.show()
             
 #cross validation
 for i in range(0, N_GESTURES):
@@ -121,8 +126,8 @@ for i in range(0, N_GESTURES):
     sample = [i]
     
     for n in range (0, N_FINGERS):
-        if verbose:
-            print "Regression " + str(i) + "/" + str(N_GESTURES) + " for finger " + str(n)
+        #if verbose:
+            #print "Regression " + str(i) + "/" + str(N_GESTURES) + " for finger " + str(n)
             
         #create N and P
         trainingN = []
