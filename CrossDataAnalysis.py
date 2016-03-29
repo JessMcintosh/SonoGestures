@@ -14,6 +14,8 @@ from sklearn import preprocessing
 from sklearn.metrics import confusion_matrix
 from sklearn import svm
 from sklearn.cross_validation import StratifiedShuffleSplit
+from sklearn.neural_network import MLPClassifier
+from sklearn.multiclass import OneVsRestClassifier
 from sklearn.grid_search import GridSearchCV
 #from svmutil import *
 from time import sleep
@@ -49,7 +51,10 @@ def cross_validate(trainingDir, testingDir):
 				realpath = os.path.realpath(dataFile)
 				#print realpath
 				startfeature = time.time()
-				result = extract.readFeatures(realpath)
+				if os.path.basename(trainingDir) == 'FeatureFlowVectors':
+					result = extract.getSumVector(realpath)
+				else:
+					result = extract.readFeatures(realpath)
 				endfeature = time.time()
 				featuretime = endfeature - startfeature
 				trainingFeatures.append(result)
@@ -70,7 +75,10 @@ def cross_validate(trainingDir, testingDir):
 				realpath = os.path.realpath(dataFile)
 				#print realpath
 				startfeature = time.time()
-				result = extract.readFeatures(realpath)
+				if os.path.basename(testingDir) == 'FeatureFlowVectors':
+					result = extract.getSumVector(realpath)
+				else:
+					result = extract.readFeatures(realpath)
 				endfeature = time.time()
 				featuretime = endfeature - startfeature
 				testingFeatures.append(result)
@@ -84,44 +92,45 @@ def cross_validate(trainingDir, testingDir):
 
 	predictions = []
 
-        #for feature_vector in features_scaled:
-        #        if count%10 == 0:
-        #                currentGesture += 1
-        #        if count%10 == i:
-        #                testingSet.append(feature_vector)
-        #                testingLabels.append(currentGesture)
-        #        else:
-        #                trainingSet.append(feature_vector)
-        #                trainingLabels.append(currentGesture)
-        #        count += 1
-
         best_percentage = 0
 
-        C_range = np.logspace(-2, 10, num=13, base=2)
-        gamma_range = np.logspace(-5, 1, num=7, base=10)
-        param_grid = dict(gamma=gamma_range, C=C_range)
-        cv = StratifiedShuffleSplit(trainingLabels, n_iter=3, test_size=0.31, random_state=42)
-        grid = GridSearchCV(svm.SVC(), param_grid=param_grid, cv=cv)
-        grid.fit(trainingFeatures, trainingLabels)
-        #C_range = np.logspace(-1, 1, num=2, base=2)
-        #gamma_range = np.logspace(-1, 1, num=2, base=10)
+        #C_range = np.logspace(-2, 10, num=13, base=2)
+        #gamma_range = np.logspace(-5, 1, num=7, base=10)
         #param_grid = dict(gamma=gamma_range, C=C_range)
-        #cv = StratifiedShuffleSplit(trainingLabels, n_iter=1, test_size=0.11, random_state=42)
+        #cv = StratifiedShuffleSplit(trainingLabels, n_iter=3, test_size=0.31, random_state=42)
         #grid = GridSearchCV(svm.SVC(), param_grid=param_grid, cv=cv)
-        #grid.fit(trainingSet, trainingLabels)
+        #grid.fit(trainingFeatures, trainingLabels)
+        ##C_range = np.logspace(-1, 1, num=2, base=2)
+        ##gamma_range = np.logspace(-1, 1, num=2, base=10)
+        ##param_grid = dict(gamma=gamma_range, C=C_range)
+        ##cv = StratifiedShuffleSplit(trainingLabels, n_iter=1, test_size=0.11, random_state=42)
+        ##grid = GridSearchCV(svm.SVC(), param_grid=param_grid, cv=cv)
+        ##grid.fit(trainingSet, trainingLabels)
 
-        best_C = grid.best_params_['C']
-        best_G = grid.best_params_['gamma']
-        #print("The best parameters are %s with a score of %0.2f"
-        #			   % (grid.best_params_, grid.best_score_))
+        #best_C = grid.best_params_['C']
+        #best_G = grid.best_params_['gamma']
+        ##print("The best parameters are %s with a score of %0.2f"
+        ##			   % (grid.best_params_, grid.best_score_))
 
 
-        #start = time.time()
-        clf = svm.SVC(C=best_C,gamma=best_G)
-        clfoutput = clf.fit(trainingFeatures, trainingLabels)
-        result = clf.predict(testingFeatures)
+        ##start = time.time()
+        #clf = svm.SVC(C=best_C,gamma=best_G)
+        #clfoutput = clf.fit(trainingFeatures, trainingLabels)
+        #result = clf.predict(testingFeatures)
         #end = time.time()
         #print end-start + featuretime
+
+
+
+        clf = OneVsRestClassifier(MLPClassifier(algorithm='l-bfgs', alpha=1e-1, hidden_layer_sizes=(15, ), random_state=1))                
+
+        trainingSet = np.array(trainingFeatures)
+        trainingLabels = np.array(trainingLabels)
+        testingSet = np.array(testingFeatures)
+        
+        clf.fit(trainingSet, trainingLabels)
+        result = clf.predict(testingSet)
+
         predictions.append(result.tolist())
         
         num_correct = 0
@@ -134,8 +143,8 @@ def cross_validate(trainingDir, testingDir):
 
 	c_matrix = confusion_matrix(testingLabels, result) 
 	print c_matrix
-        plot_confusion_matrix(c_matrix,"confusionmatrix")
-
+        #plot_confusion_matrix(c_matrix,"confusionmatrix")
+        
 	return percentage, c_matrix
 
 def validate_participant(dir1, dir2):

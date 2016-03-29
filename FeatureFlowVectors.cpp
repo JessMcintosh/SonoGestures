@@ -29,7 +29,6 @@ void sampleOptFlowMap(const Mat& flow, Mat& cflowmap, int step)
 			//	cout << (int)ux << ',' ;//<< (int)fy << ',';
 			//}
         }
-	cout << endl;
 }
 static void drawOptFlowMap(const Mat& flow, Mat& cflowmap, int step,
                     double, const Scalar& color)
@@ -56,77 +55,6 @@ static void drawOptFlowMap(const Mat& flow, Mat& cflowmap, int step,
             //arrowedLine(cflowmap, Point(x,y), Point(cvRound(x+(fx*scale)), cvRound(y+(fy*scale))), col, 2);
             circle(cflowmap, Point(x,y), 1, color, 1);
         }
-}
-
-void thresholdFlowMatrix(Mat& flow, float threshold){
-    for(int y = 0; y < flow.rows; y ++)
-        for(int x = 0; x < flow.cols; x ++){
-            Point2f& f = flow.at<Point2f>(y, x);
-			if(sqrt(f.x*f.x + f.y*f.y) < threshold){
-				f.x = 0.0;
-				f.y = 0.0;
-			}
-		}
-}
-
-void absdiffRegions(const UMat& prev, const UMat& curr, UMat& dst){
-	
-}
-
-double sumSqMag(Mat& flow){
-	double mag = 0.0;
-    for(int y = 0; y < flow.rows; y ++)
-        for(int x = 0; x < flow.cols; x ++){
-            Point2f& f = flow.at<Point2f>(y, x);
-			//mag += sqrt(f.x*f.x + f.y*f.y);
-			mag += (f.x*f.x + f.y*f.y);
-		}
-	return mag/1000.0;
-}
-
-double sumMagHorizontal(Mat& flow){
-	double mag = 0.0;
-    for(int y = 0; y < flow.rows; y ++)
-        for(int x = 0; x < flow.cols; x ++){
-            Point2f& f = flow.at<Point2f>(y, x);
-			mag += sqrt(f.x*f.x + f.y*f.y);
-		}
-	return mag;
-}
-
-void calcFlowMag(Mat& flow, Mat& result){
-    for(int y = 0; y < flow.rows; y ++)
-        for(int x = 0; x < flow.cols; x ++){
-            Point2f& f = flow.at<Point2f>(y, x);
-			result.at<float>(y,x) = sqrt(f.x*f.x + f.y*f.y);
-		}
-}
-
-void sampleMatrix(Mat& magnitudes, Mat& result, int step){
-	// Loop through sampled points
-	int count = 0;
-    for(int y = step/2; y < magnitudes.rows-step; y += step){
-        for(int x = step/2; x < magnitudes.cols-step; x += step){
-
-			// Loop through neighbouring pixels
-
-			float avg = 0;
-			
-			for (int i = 0; i < step; i++) 
-				for (int j = 0; j < step; j++) 
-					avg += magnitudes.at<float>(y+i, x+j);
-
-			avg /= step*step;
-			for (int i = 0; i < step; i++) 
-				for (int j = 0; j < step; j++)
-					result.at<float>(y+i,x+j) = avg;
-
-			cout << avg << " ";
-			//cout << count << ":" << avg << " ";
-			count ++;
-		}
-	}
-	cout << endl;
 }
 
 int main(int argc, char** argv)

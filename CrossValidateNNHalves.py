@@ -47,20 +47,20 @@ def cross_validate(gestures, originalPath):
 	
 	for i in os.listdir(os.getcwd()):
 		if i in gestures:
-			#print i
+			#print i, 'flex'
 			os.chdir(parentPath + "/" + i)
 			for dataFile in os.listdir(os.getcwd()):
 				#print dataFile
 				realpath = os.path.realpath(dataFile)
-				#print realpath
-				startfeature = time.time()
-				if os.path.basename(parentPath) == 'FeatureFlowVectors':
-					result = extract.getSumVector(realpath)
-				else:
-					result = extract.readFeatures(realpath)
-				endfeature = time.time()
-				featuretime = endfeature - startfeature
-				features.append(result)
+                                firsthalf = extract.getSumVectorHalf1(realpath)
+				features.append(firsthalf)
+			#print i, 'extend'
+			os.chdir(parentPath + "/" + i)
+			for dataFile in os.listdir(os.getcwd()):
+				#print dataFile
+				realpath = os.path.realpath(dataFile)
+                                secondhalf = extract.getSumVectorHalf2(realpath)
+				features.append(secondhalf)
 
         print 'Features loaded.'
 	features_scaled = (preprocessing.scale(features)).tolist()
@@ -136,7 +136,7 @@ def cross_validate(gestures, originalPath):
 				num_correct += 1
 
 
-		percentage = (float(num_correct) * 100.0) / float(len(gestures))
+		percentage = (float(num_correct) * 100.0) / float(len(gestures*2))
 		#print 'percentage: ' , percentage
 		best_percentage = percentage
 

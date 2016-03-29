@@ -19,9 +19,9 @@ N_FINGERS = 5
 def regression(N, P):
     assert len(N) == len(P)
     
-	clf = MLPRegressor(hidden_layer_sizes=(64, ), activation='relu', algorithm='adam', alpha=0.0001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=200, shuffle=True, random_state=None, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
-	
-	clf.fit (N, P)
+    clf = MLPRegressor(hidden_layer_sizes=(15, ), activation='relu', algorithm='adam', alpha=0.0001)
+    
+    clf.fit (N, P)
     return clf
 
 
@@ -35,7 +35,7 @@ def calcNRMS(nn, N,P):
     minV = sys.float_info.max
     maxV = -sys.float_info.max
     predictedValues = nn.predict(N)
-	for i in range(0, sizeP):
+    for i in range(0, sizeP):
         realValue = P[i]
         predictedValue = predictedValues[i]
         diff = realValue - predictedValue
@@ -98,17 +98,16 @@ for ig in GESTURES:
         features[ig].append( loadFile(featurePath) )
         fingers[ig].append( loadFile(fingerPath).T )
         
-		
+        
 #filter the glove data
-'''
+
 for ig in GESTURES:
     for n in range(0,N_GESTURES):
         for f in range(0,N_FINGERS):
             #lowPassFilter(fingers[ig][n][f], 0.1)   
             medianFilter(fingers[ig][n][f], 15)
-'''            
+           
      
-	 
 #cross validation
 errors = np.zeros( N_FINGERS );
 for i in range(0, N_GESTURES):
@@ -135,20 +134,20 @@ for i in range(0, N_GESTURES):
                 sampleN.extend( features[ig][inu] ) 
                 sampleP.extend( fingers[ig][inu][n] )
         
-		scaler = StandardScaler()  
-		scaler.fit(trainingN)  
-		trainingN = scaler.transform(trainingN)  
-		sampleN = scaler.transform(sampleN)  
+        scaler = StandardScaler()  
+        scaler.fit(trainingN)  
+        trainingN = scaler.transform(trainingN)  
+        sampleN = scaler.transform(sampleN)  
         result = regression(trainingN, trainingP)
         errors[n] += calcNRMS(result, sampleN, sampleP)
 
-if verbose:
-    print "---------- "
+#if verbose:
+print "---------- "
 average = 0
 for n in range (0, N_FINGERS):
     percentage = (errors[n]/N_GESTURES*100)
     average += percentage
-    if verbose:
-        print "NRMS for finger " + str(n) + " " + ("%.2f" % percentage)
+    #if verbose:
+    print "NRMS for finger " + str(n) + " " + ("%.2f" % percentage)
 average /= N_FINGERS
-print str(average)
+print "average ", str(average)

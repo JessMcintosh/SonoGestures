@@ -2,8 +2,8 @@ from subprocess import call
 import os
 import sys
 
-PATH = "C:/Users/am14010/Google Drive/SonicGesturesData/18-03-2016/"
-EXEC = "LinearRegression.py"
+PATH = "/home/nappy/Drive/SonicGesturesData/18-03-2016"
+EXEC = "NNReg.py"
 
 program = os.path.join( os.path.dirname(sys.argv[0]) ,EXEC) 
 
@@ -14,4 +14,4 @@ for participant in os.listdir(PATH):
             lDir = os.path.join(pDir, location, "FeatureFramesMoments")
             if (os.path.isdir( lDir)):
                 print participant, " ", location
-                call(["python", program, lDir,"v"])
+                call(["python", program, lDir])

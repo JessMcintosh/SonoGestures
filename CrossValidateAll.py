@@ -15,12 +15,13 @@ from itertools import izip
 from pyexcel_ods import save_data
 from CrossValidateSVM import validate_participant as CV_SVM
 from CrossValidateNN import validate_participant as CV_NN
+from CrossValidateNNHalves import validate_participant as CV_NNHalves
 from collections import OrderedDict
 
 features = ['features', 'FeaturesFlowMag']
-locations = ['dpa', 'lpa', 'tda', 'tpa']
-#locations = ['dpa', 'lpa', 'tda', 'tpa', 'tpp']
-participants = ['Asier', 'Jess']
+#locations = ['dpa', 'lpa', 'tda', 'tpa']
+locations = ['dpa', 'lpa', 'tda', 'tpa', 'tpp']
+participants = ['Asier','Asier2','Jess']
 
 cv_rates_all = []
 c_matrices_all = []
@@ -43,7 +44,7 @@ for p in participants:
     for loc in locations:
         print p, loc
         path = os.path.join(data_path, p, loc, featureSet)
-        cv_rate, c_matrix = CV_NN(path)
+        cv_rate, c_matrix = CV_NNHalves(path)
         cv_rates.append(cv_rate)
         c_matrices.append(c_matrix)
 
